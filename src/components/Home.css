@@ -1,0 +1,15 @@
+.cld {
+  background: rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+}
+/* .yoh {
+  background-image: url("https://gallery.yopriceville.com/downloadfullsize/send/11264");
+  background-repeat: no-repeat;
+  background-size: cover;
+} */
+/* .search-icon{
+    
+} */
