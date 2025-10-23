@@ -35,7 +35,7 @@ function MiddlePart(){
             <div class="carousel-inner">
               <div class="carousel-item active">
                 <img
-                  src="https://lh4.googleusercontent.com/OljzWa2o_v9hzbU4ssWVn3DdOcaTx_cKecch2IG6xuByffH6RqFNcL2qDzXMnqFT5S-M_CAnyigz6bh66phNQjlrevcts79jVepTyoK5BZohUfGFo3abaryV3PbFvVijV6GdZnVN8eAQZzsA7GTUfhE"
+                  src="https://media.istockphoto.com/id/2155879397/photo/house-in-a-charming-neighborhood-with-stunning-sidewalk-landscaping.jpg?s=612x612&w=0&k=20&c=nQJOUoNb2RNev3QVNjIohcmxQABCTetCdgfnc8MV8sU="
                   class="d-block w-100 h-140 object-cover"
                   alt="..."
                 />
