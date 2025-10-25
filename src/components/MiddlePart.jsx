@@ -40,9 +40,9 @@ function MiddlePart(){
                   alt="..."
                 />
                 <div class="carousel-caption d-none d-md-block text-white">
-                  <h5 class='text-white'>Houses</h5>
+                  <h5 class='text-white'>HOUSES</h5>
                   <p>
-                    Lorem ipsum dolor, sit amet consectetur adipisicing elit. Fugit dicta temporibus eaque vero, eveniet nesciunt tempora quae rem laboriosam accusantium!
+                    Locate your ideal apartment in the perfect neighborhood.
                   </p>
                 </div>
               </div>
@@ -53,10 +53,9 @@ function MiddlePart(){
                   alt="..."
                 />
                 <div class="carousel-caption d-none d-md-block">
-                  <h5>Second slide label</h5>
+                  <h5>HOSTELS</h5>
                   <p>
-                    Some representative placeholder content for the second
-                    slide.
+                    Discover comfortable and affordable hostel stays.
                   </p>
                 </div>
               </div>
@@ -67,9 +66,9 @@ function MiddlePart(){
                   alt="..."
                 />
                 <div class="carousel-caption d-none d-md-block">
-                  <h5 class='text-white'>Third slide label</h5>
+                  <h5 class='text-white'>LAND</h5>
                   <p>
-                    Some representative placeholder content for the third slide.
+                    Find the perfect plot of land to build your future.
                   </p>
                 </div>
               </div>

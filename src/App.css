@@ -1,1 +1,55 @@
 @import "tailwindcss";
+
+.reviews-section {
+  background: linear-gradient(180deg, #0d0d0d 0%, #151515 100%);
+  font-family: 'Poppins', sans-serif;
+}
+
+.review-card:hover {
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+}
+.clients-section {
+  position: relative;
+  font-family: "Poppins", sans-serif;
+}
+
+/* Continuous scrolling effect */
+@keyframes scrollText {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.clients-scroll {
+  display: inline-flex;
+  animation: scrollText 20s linear infinite;
+}
+
+/* Smooth infinite horizontal scroll animation */
+@keyframes scrollX {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.scroll-section {
+  font-family: "Poppins", sans-serif;
+}
+
+.scroll-track {
+  width: max-content;
+  display: flex;
+  align-items: center;
+  animation: scrollX 25s linear infinite;
+}
+
+.scroll-container:hover .scroll-track {
+  animation-play-state: paused; /* Pause on hover */
+}
+
