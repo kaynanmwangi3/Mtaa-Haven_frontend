@@ -21,7 +21,10 @@ function Title(){
                <p class="text-white text-2xl"><Link to='/' className='link-tag-links'>Home </Link></p>
                <p class="text-white text-2xl"><Link to='/about' className='link-tag-links'>About</Link></p>
                {isAuthenticated && (
-                 <p class="text-white text-2xl"><Link to='/properties' className='link-tag-links'>Properties</Link></p>
+                 <>
+                   <p class="text-white text-2xl"><Link to='/properties' className='link-tag-links'>Properties</Link></p>
+                   <p class="text-white text-2xl"><Link to='/dashboard' className='link-tag-links'>Dashboard</Link></p>
+                 </>
                )}
              </div>
              <div class="bg-black flex flex-col items-center justify-center p-2">

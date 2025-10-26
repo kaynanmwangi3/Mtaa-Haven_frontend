@@ -35,11 +35,11 @@ const PropertyModal = ({ property, isOpen, onClose, onFavorite }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="property-modal-title">
+      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden" role="document">
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-2xl font-bold text-gray-800">{property.name}</h2>
+          <h2 id="property-modal-title" className="text-2xl font-bold text-gray-800">{property.name}</h2>
           <div className="flex items-center gap-4">
             <button
               onClick={handleFavorite}
@@ -52,6 +52,7 @@ const PropertyModal = ({ property, isOpen, onClose, onFavorite }) => {
             <button
               onClick={onClose}
               className="p-2 rounded-full text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label="Close property details"
             >
               <FaTimes className="text-xl" />
             </button>

@@ -9,12 +9,21 @@ import Footer from './components/Footer.jsx';
 import Properties from './pages/Properties.jsx';
 import BriefAbout from './pages/BriefAbout.jsx';
 import Profile from './pages/Profile.jsx';
+import Dashboard from './pages/Dashboard.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
-import React from 'react'
+import React, { Suspense } from 'react'
 import { Cloudinary } from '@cloudinary/url-gen';
 import { auto } from '@cloudinary/url-gen/actions/resize';
 import { autoGravity } from '@cloudinary/url-gen/qualifiers/gravity';
 import { AdvancedImage } from '@cloudinary/react';
+
+// Lazy load components for better performance
+const LazyHome = React.lazy(() => import('./components/Home'));
+const LazyProperties = React.lazy(() => import('./pages/Properties'));
+const LazyDashboard = React.lazy(() => import('./pages/Dashboard'));
+const LazyProfile = React.lazy(() => import('./pages/Profile'));
+const LazyBriefAbout = React.lazy(() => import('./pages/BriefAbout'));
+const LazyLoginPage = React.lazy(() => import('./pages/LoginPage'));
 
 const App = () => {
   const cld = new Cloudinary({ cloud: { cloudName: 'djtahjahe' } });
@@ -30,24 +39,31 @@ const App = () => {
     <div>
     <Navbar/>
     <Title/>
-    <Routes>
-      <Route path='/' element={<Bridge/>}>
-        <Route index element={<Home/>} />
-        <Route path="login" element={<LoginPage />} />
-        <Route path="properties" element={
-          <ProtectedRoute>
-            <Properties/>
-          </ProtectedRoute>
-        } />
-        <Route path="about" element={<BriefAbout/>} />
-        <Route path="profile" element={
-          <ProtectedRoute>
-            <Profile/>
-          </ProtectedRoute>
-        } />
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-black text-white">Loading...</div>}>
+      <Routes>
+        <Route path='/' element={<Bridge/>}>
+          <Route index element={<LazyHome/>} />
+          <Route path="login" element={<LazyLoginPage />} />
+          <Route path="properties" element={
+            <ProtectedRoute>
+              <LazyProperties/>
+            </ProtectedRoute>
+          } />
+          <Route path="dashboard" element={
+            <ProtectedRoute>
+              <LazyDashboard/>
+            </ProtectedRoute>
+          } />
+          <Route path="about" element={<LazyBriefAbout/>} />
+          <Route path="profile" element={
+            <ProtectedRoute>
+              <LazyProfile/>
+            </ProtectedRoute>
+          } />
 
-      </Route>
-    </Routes>
+        </Route>
+      </Routes>
+    </Suspense>
     <Footer/>
     </div>
   )
