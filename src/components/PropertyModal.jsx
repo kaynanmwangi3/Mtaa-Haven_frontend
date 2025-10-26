@@ -1,13 +1,27 @@
 import { useState } from 'react';
-import { FaBed, FaBath, FaRulerCombined, FaMapMarkerAlt, FaHeart, FaTimes } from 'react-icons/fa';
+import { FaBed, FaBath, FaRulerCombined, FaMapMarkerAlt, FaHeart, FaTimes, FaCalendarAlt, FaCreditCard } from 'react-icons/fa';
 import { Cloudinary } from '@cloudinary/url-gen';
 import { auto } from '@cloudinary/url-gen/actions/resize';
 import { autoGravity } from '@cloudinary/url-gen/qualifiers/gravity';
 import { AdvancedImage } from '@cloudinary/react';
+import api from '../services/auth';
 
 const PropertyModal = ({ property, isOpen, onClose, onFavorite }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFavorited, setIsFavorited] = useState(false);
+  const [showBookingForm, setShowBookingForm] = useState(false);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [bookingData, setBookingData] = useState({
+    move_in_date: '',
+    lease_duration: '12',
+    special_requests: ''
+  });
+  const [paymentData, setPaymentData] = useState({
+    amount: '',
+    payment_method: 'mpesa',
+    phone_number: ''
+  });
+  const [loading, setLoading] = useState(false);
 
   if (!isOpen || !property) return null;
 
@@ -24,6 +38,49 @@ const PropertyModal = ({ property, isOpen, onClose, onFavorite }) => {
   const handleFavorite = () => {
     setIsFavorited(!isFavorited);
     onFavorite && onFavorite(property.id, !isFavorited);
+  };
+
+  const handleBooking = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const bookingPayload = {
+        property_id: property.id,
+        ...bookingData
+      };
+
+      await api.post('/bookings', bookingPayload);
+      alert('Booking request submitted successfully!');
+      setShowBookingForm(false);
+      setShowPaymentForm(true);
+    } catch (error) {
+      console.error('Booking error:', error);
+      alert('Failed to submit booking. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePayment = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const paymentPayload = {
+        property_id: property.id,
+        amount: property.rent_amount,
+        ...paymentData
+      };
+
+      await api.post('/payments', paymentPayload);
+      alert('Payment processed successfully!');
+      setShowPaymentForm(false);
+      onClose();
+    } catch (error) {
+      console.error('Payment error:', error);
+      alert('Payment failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const nextImage = () => {
@@ -203,17 +260,147 @@ const PropertyModal = ({ property, isOpen, onClose, onFavorite }) => {
                   rows="3"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 ></textarea>
-                <button
-                  type="submit"
-                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Send Inquiry
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowBookingForm(true)}
+                    className="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <FaCalendarAlt />
+                    Book Property
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    Send Inquiry
+                  </button>
+                </div>
               </form>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Booking Modal */}
+      {showBookingForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-xl font-bold mb-4">Book Property</h3>
+            <form onSubmit={handleBooking}>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Move-in Date</label>
+                  <input
+                    type="date"
+                    value={bookingData.move_in_date}
+                    onChange={(e) => setBookingData({...bookingData, move_in_date: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Lease Duration (months)</label>
+                  <select
+                    value={bookingData.lease_duration}
+                    onChange={(e) => setBookingData({...bookingData, lease_duration: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  >
+                    <option value="6">6 months</option>
+                    <option value="12">12 months</option>
+                    <option value="24">24 months</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Special Requests</label>
+                  <textarea
+                    value={bookingData.special_requests}
+                    onChange={(e) => setBookingData({...bookingData, special_requests: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    rows="3"
+                    placeholder="Any special requirements..."
+                  />
+                </div>
+              </div>
+              <div className="flex gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowBookingForm(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50"
+                >
+                  {loading ? 'Submitting...' : 'Submit Booking'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Modal */}
+      {showPaymentForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-xl font-bold mb-4">Complete Payment</h3>
+            <div className="mb-4 p-3 bg-gray-50 rounded-md">
+              <p className="text-sm text-gray-600">Property: {property.name}</p>
+              <p className="text-lg font-bold text-green-600">KES {property.rent_amount?.toLocaleString()}</p>
+            </div>
+            <form onSubmit={handlePayment}>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Payment Method</label>
+                  <select
+                    value={paymentData.payment_method}
+                    onChange={(e) => setPaymentData({...paymentData, payment_method: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  >
+                    <option value="mpesa">M-Pesa</option>
+                    <option value="card">Credit/Debit Card</option>
+                    <option value="bank">Bank Transfer</option>
+                  </select>
+                </div>
+                {paymentData.payment_method === 'mpesa' && (
+                  <div>
+                    <label className="block text-sm font-medium mb-1">M-Pesa Phone Number</label>
+                    <input
+                      type="tel"
+                      value={paymentData.phone_number}
+                      onChange={(e) => setPaymentData({...paymentData, phone_number: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      placeholder="0712345678"
+                      required
+                    />
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowPaymentForm(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  <FaCreditCard />
+                  {loading ? 'Processing...' : 'Pay Now'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

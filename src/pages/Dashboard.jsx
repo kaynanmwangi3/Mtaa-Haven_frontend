@@ -1,16 +1,26 @@
 import { useState, useEffect } from 'react';
-import { FaHeart, FaEye, FaSearch, FaFilter, FaBars, FaTimes, FaHome, FaUser, FaCog, FaSignOutAlt } from 'react-icons/fa';
+import { FaHeart, FaEye, FaSearch, FaFilter, FaBars, FaTimes, FaHome, FaUser, FaCog, FaSignOutAlt, FaExclamationTriangle, FaBell } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth';
+import api from '../services/auth';
 import '../App.css';
 
 function Dashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [favorites, setFavorites] = useState(new Set());
-  const [recentViews, setRecentViews] = useState([]);
-  const [searchHistory, setSearchHistory] = useState([]);
-  const [comparisonList, setComparisonList] = useState([]);
+  const [user, setUser] = useState(null);
+  const [properties, setProperties] = useState([]);
+  const [bookings, setBookings] = useState([]);
+  const [payments, setPayments] = useState([]);
+  const [issues, setIssues] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showIssueForm, setShowIssueForm] = useState(false);
+  const [issueData, setIssueData] = useState({
+    title: '',
+    description: '',
+    priority: 'medium'
+  });
   const navigate = useNavigate();
 
   // Demo data
@@ -48,24 +58,96 @@ function Dashboard() {
   ];
 
   useEffect(() => {
-    // Load user data from localStorage
-    const savedFavorites = localStorage.getItem('favorites');
-    if (savedFavorites) {
-      setFavorites(new Set(JSON.parse(savedFavorites)));
-    }
-
-    // Demo recent views and search history
-    setRecentViews(demoProperties.slice(0, 2));
-    setSearchHistory([
-      { query: '2 bedroom apartment westlands', timestamp: new Date() },
-      { query: 'affordable studio', timestamp: new Date(Date.now() - 86400000) },
-      { query: 'house karen', timestamp: new Date(Date.now() - 172800000) }
-    ]);
+    const currentUser = authService.getCurrentUser();
+    setUser(currentUser);
+    fetchDashboardData();
   }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+
+      if (user?.user_type === 'landlord') {
+        // Fetch landlord data
+        const [propertiesRes, paymentsRes, notificationsRes] = await Promise.all([
+          api.get('/properties/landlord'),
+          api.get('/payments/landlord'),
+          api.get('/notifications/landlord')
+        ]);
+        setProperties(propertiesRes.data.properties || []);
+        setPayments(paymentsRes.data.payments || []);
+        setNotifications(notificationsRes.data.notifications || []);
+      } else {
+        // Fetch tenant data
+        const [bookingsRes, paymentsRes, issuesRes, notificationsRes] = await Promise.all([
+          api.get('/bookings/tenant'),
+          api.get('/payments/tenant'),
+          api.get('/issues/tenant'),
+          api.get('/notifications/tenant')
+        ]);
+        setBookings(bookingsRes.data.bookings || []);
+        setPayments(paymentsRes.data.payments || []);
+        setIssues(issuesRes.data.issues || []);
+        setNotifications(notificationsRes.data.notifications || []);
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      // Use demo data as fallback
+      loadDemoData();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadDemoData = () => {
+    if (user?.user_type === 'landlord') {
+      setProperties([
+        { id: 1, name: 'Modern Apartment', location: 'Westlands', status: 'occupied', rent_amount: 25000 },
+        { id: 2, name: 'Studio Unit', location: 'Kilimani', status: 'vacant', rent_amount: 15000 }
+      ]);
+      setPayments([
+        { id: 1, amount: 25000, status: 'paid', date: '2024-01-15', tenant: 'John Doe' },
+        { id: 2, amount: 15000, status: 'pending', date: '2024-01-15', tenant: 'Jane Smith' }
+      ]);
+      setNotifications([
+        { id: 1, message: 'New booking request for Modern Apartment', type: 'booking', date: '2024-01-15' },
+        { id: 2, message: 'Payment received from John Doe', type: 'payment', date: '2024-01-14' }
+      ]);
+    } else {
+      setBookings([{ id: 1, property_name: 'Modern Apartment', status: 'confirmed', move_in_date: '2024-02-01' }]);
+      setPayments([
+        { id: 1, amount: 25000, status: 'paid', date: '2024-01-15', property: 'Modern Apartment' },
+        { id: 2, amount: 25000, status: 'paid', date: '2023-12-15', property: 'Modern Apartment' }
+      ]);
+      setIssues([
+        { id: 1, title: 'Leaky faucet', description: 'Kitchen faucet is leaking', status: 'resolved', date: '2024-01-10', priority: 'low' },
+        { id: 2, title: 'Broken light', description: 'Living room light not working', status: 'pending', date: '2024-01-12', priority: 'medium' }
+      ]);
+      setNotifications([
+        { id: 1, message: 'Your booking for Modern Apartment has been confirmed', type: 'booking', date: '2024-01-15' },
+        { id: 2, message: 'Maintenance request update', type: 'issue', date: '2024-01-14' }
+      ]);
+    }
+  };
 
   const handleLogout = () => {
     authService.logout();
     navigate('/login');
+  };
+
+  const handleReportIssue = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/issues', issueData);
+      alert('Issue reported successfully!');
+      setShowIssueForm(false);
+      setIssueData({ title: '', description: '', priority: 'medium' });
+      // Refresh issues
+      fetchDashboardData();
+    } catch (error) {
+      console.error('Error reporting issue:', error);
+      alert('Failed to report issue. Please try again.');
+    }
   };
 
   const toggleFavorite = (propertyId) => {
@@ -91,112 +173,245 @@ function Dashboard() {
 
   const renderOverview = () => (
     <div className="space-y-6">
+      {/* Notifications Banner */}
+      {notifications.length > 0 && (
+        <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
+          <div className="flex items-center">
+            <FaBell className="text-blue-400 mr-3" />
+            <div>
+              <p className="text-sm text-blue-700">
+                You have {notifications.length} new notification{notifications.length > 1 ? 's' : ''}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white p-6 rounded-lg shadow-md">
           <div className="flex items-center">
-            <FaHeart className="text-red-500 text-2xl mr-3" />
+            <FaHome className="text-blue-500 text-2xl mr-3" />
             <div>
-              <p className="text-2xl font-bold">{favorites.size}</p>
-              <p className="text-gray-600">Saved Properties</p>
+              <p className="text-2xl font-bold">{properties.length}</p>
+              <p className="text-gray-600">Properties</p>
             </div>
           </div>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-md">
           <div className="flex items-center">
-            <FaEye className="text-blue-500 text-2xl mr-3" />
+            <FaEye className="text-green-500 text-2xl mr-3" />
             <div>
-              <p className="text-2xl font-bold">{recentViews.length}</p>
-              <p className="text-gray-600">Recent Views</p>
+              <p className="text-2xl font-bold">{bookings.length}</p>
+              <p className="text-gray-600">Active Bookings</p>
             </div>
           </div>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-md">
           <div className="flex items-center">
-            <FaSearch className="text-green-500 text-2xl mr-3" />
+            <FaSearch className="text-purple-500 text-2xl mr-3" />
             <div>
-              <p className="text-2xl font-bold">{searchHistory.length}</p>
-              <p className="text-gray-600">Search History</p>
+              <p className="text-2xl font-bold">KES {payments.reduce((sum, p) => sum + (p.amount || 0), 0).toLocaleString()}</p>
+              <p className="text-gray-600">Total Payments</p>
             </div>
           </div>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-md">
           <div className="flex items-center">
-            <FaFilter className="text-purple-500 text-2xl mr-3" />
+            <FaExclamationTriangle className="text-red-500 text-2xl mr-3" />
             <div>
-              <p className="text-2xl font-bold">{comparisonList.length}</p>
-              <p className="text-gray-600">In Comparison</p>
+              <p className="text-2xl font-bold">{issues.filter(i => i.status === 'pending').length}</p>
+              <p className="text-gray-600">Open Issues</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Recent Activity */}
+      {/* Recent Notifications */}
       <div className="bg-white p-6 rounded-lg shadow-md">
-        <h3 className="text-xl font-semibold mb-4">Recent Activity</h3>
+        <h3 className="text-xl font-semibold mb-4">Recent Notifications</h3>
         <div className="space-y-3">
-          {recentViews.map((property, index) => (
-            <div key={property.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          {notifications.slice(0, 5).map((notification) => (
+            <div key={notification.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div className="flex items-center">
-                <img src={property.image} alt={property.name} className="w-12 h-12 rounded-lg object-cover mr-3" />
+                <FaBell className="text-blue-500 mr-3" />
                 <div>
-                  <p className="font-medium">{property.name}</p>
-                  <p className="text-sm text-gray-600">KES {property.rent_amount.toLocaleString()}</p>
+                  <p className="font-medium">{notification.message}</p>
+                  <p className="text-sm text-gray-600">{notification.date}</p>
                 </div>
               </div>
-              <button
-                onClick={() => navigate('/properties')}
-                className="text-blue-600 hover:text-blue-800"
-              >
-                View Again
-              </button>
+              <span className={`px-2 py-1 rounded text-xs ${
+                notification.type === 'booking' ? 'bg-green-100 text-green-800' :
+                notification.type === 'payment' ? 'bg-blue-100 text-blue-800' :
+                'bg-yellow-100 text-yellow-800'
+              }`}>
+                {notification.type}
+              </span>
             </div>
           ))}
+          {notifications.length === 0 && (
+            <p className="text-gray-500 text-center py-4">No recent notifications</p>
+          )}
         </div>
       </div>
     </div>
   );
 
-  const renderFavorites = () => (
-    <div>
-      <h2 className="text-2xl font-bold mb-6">Saved Properties</h2>
-      {favorites.size === 0 ? (
-        <div className="text-center py-12">
-          <FaHeart className="text-gray-300 text-6xl mx-auto mb-4" />
-          <p className="text-gray-500 text-lg">No saved properties yet</p>
-          <Link to="/properties" className="text-blue-600 hover:text-blue-800 mt-2 inline-block">
-            Browse Properties
-          </Link>
+  const renderTenantView = () => (
+    <div className="space-y-6">
+      {/* Report Issue Button */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">My Dashboard</h2>
+        <button
+          onClick={() => setShowIssueForm(true)}
+          className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 flex items-center gap-2"
+        >
+          <FaExclamationTriangle />
+          Report Issue
+        </button>
+      </div>
+
+      {/* Current Bookings */}
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h3 className="text-xl font-semibold mb-4">My Bookings</h3>
+        <div className="space-y-3">
+          {bookings.map(booking => (
+            <div key={booking.id} className="p-4 border rounded">
+              <h4 className="font-medium">{booking.property_name}</h4>
+              <p className="text-sm text-gray-600">Move-in: {booking.move_in_date}</p>
+              <span className={`px-2 py-1 rounded text-sm ${
+                booking.status === 'confirmed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+              }`}>
+                {booking.status}
+              </span>
+            </div>
+          ))}
+          {bookings.length === 0 && (
+            <p className="text-gray-500 text-center py-4">No active bookings</p>
+          )}
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {demoProperties.filter(property => favorites.has(property.id)).map(property => (
-            <div key={property.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-              <img src={property.image} alt={property.name} className="w-full h-48 object-cover" />
-              <div className="p-4">
-                <h3 className="font-semibold text-lg mb-2">{property.name}</h3>
-                <p className="text-green-600 font-bold mb-2">KES {property.rent_amount.toLocaleString()}</p>
-                <p className="text-gray-600 text-sm mb-3">{property.location}</p>
-                <div className="flex justify-between items-center">
-                  <button
-                    onClick={() => toggleFavorite(property.id)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <FaHeart className="text-xl fill-current" />
-                  </button>
-                  <button
-                    onClick={() => addToComparison(property)}
-                    className="bg-blue-600 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-700"
-                    disabled={comparisonList.length >= 3}
-                  >
-                    Compare
-                  </button>
-                </div>
+      </div>
+
+      {/* Payment History */}
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h3 className="text-xl font-semibold mb-4">Payment History</h3>
+        <div className="space-y-3">
+          {payments.map(payment => (
+            <div key={payment.id} className="flex justify-between items-center p-3 border rounded">
+              <div>
+                <p className="font-medium">{payment.property}</p>
+                <p className="text-sm text-gray-600">{payment.date}</p>
+              </div>
+              <div className="text-right">
+                <p className="font-medium">KES {payment.amount?.toLocaleString()}</p>
+                <span className={`px-2 py-1 rounded text-sm ${
+                  payment.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {payment.status}
+                </span>
+              </div>
+            </div>
+          ))}
+          {payments.length === 0 && (
+            <p className="text-gray-500 text-center py-4">No payment history</p>
+          )}
+        </div>
+      </div>
+
+      {/* Reported Issues */}
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h3 className="text-xl font-semibold mb-4">Reported Issues</h3>
+        <div className="space-y-3">
+          {issues.map(issue => (
+            <div key={issue.id} className="p-4 border rounded">
+              <div className="flex justify-between items-start mb-2">
+                <h4 className="font-medium">{issue.title}</h4>
+                <span className={`px-2 py-1 rounded text-xs ${
+                  issue.priority === 'high' ? 'bg-red-100 text-red-800' :
+                  issue.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-green-100 text-green-800'
+                }`}>
+                  {issue.priority}
+                </span>
+              </div>
+              <p className="text-sm text-gray-600 mb-2">{issue.description}</p>
+              <div className="flex justify-between items-center">
+                <p className="text-sm text-gray-500">{issue.date}</p>
+                <span className={`px-2 py-1 rounded text-sm ${
+                  issue.status === 'resolved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {issue.status}
+                </span>
+              </div>
+            </div>
+          ))}
+          {issues.length === 0 && (
+            <p className="text-gray-500 text-center py-4">No reported issues</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderLandlordView = () => (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Landlord Dashboard</h2>
+
+      {/* Properties Overview */}
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h3 className="text-xl font-semibold mb-4">My Properties</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b">
+                <th className="text-left p-2">Property</th>
+                <th className="text-left p-2">Location</th>
+                <th className="text-left p-2">Status</th>
+                <th className="text-left p-2">Rent</th>
+              </tr>
+            </thead>
+            <tbody>
+              {properties.map(property => (
+                <tr key={property.id} className="border-b">
+                  <td className="p-2">{property.name}</td>
+                  <td className="p-2">{property.location}</td>
+                  <td className="p-2">
+                    <span className={`px-2 py-1 rounded text-sm ${
+                      property.status === 'occupied' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {property.status}
+                    </span>
+                  </td>
+                  <td className="p-2">KES {property.rent_amount?.toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Payment Tracking */}
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h3 className="text-xl font-semibold mb-4">Payment Tracking</h3>
+        <div className="space-y-3">
+          {payments.map(payment => (
+            <div key={payment.id} className="flex justify-between items-center p-3 border rounded">
+              <div>
+                <p className="font-medium">{payment.tenant}</p>
+                <p className="text-sm text-gray-600">{payment.date}</p>
+              </div>
+              <div className="text-right">
+                <p className="font-medium">KES {payment.amount?.toLocaleString()}</p>
+                <span className={`px-2 py-1 rounded text-sm ${
+                  payment.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {payment.status}
+                </span>
               </div>
             </div>
           ))}
         </div>
-      )}
+      </div>
     </div>
   );
 
@@ -356,10 +571,132 @@ function Dashboard() {
 
         {/* Content */}
         <main className="p-6">
-          {activeTab === 'overview' && renderOverview()}
-          {activeTab === 'favorites' && renderFavorites()}
-          {activeTab === 'comparison' && renderComparison()}
+          {user?.user_type === 'landlord' ? renderLandlordView() : renderTenantView()}
         </main>
+
+        {/* Issue Reporting Modal */}
+        {showIssueForm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+              <h3 className="text-xl font-bold mb-4">Report an Issue</h3>
+              <form onSubmit={handleReportIssue}>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Issue Title</label>
+                    <input
+                      type="text"
+                      value={issueData.title}
+                      onChange={(e) => setIssueData({...issueData, title: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      placeholder="Brief description of the issue"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Description</label>
+                    <textarea
+                      value={issueData.description}
+                      onChange={(e) => setIssueData({...issueData, description: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      rows="4"
+                      placeholder="Detailed description of the issue"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Priority</label>
+                    <select
+                      value={issueData.priority}
+                      onChange={(e) => setIssueData({...issueData, priority: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    >
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="flex gap-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowIssueForm(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+                  >
+                    Report Issue
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Issue Reporting Modal */}
+        {showIssueForm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+              <h3 className="text-xl font-bold mb-4">Report an Issue</h3>
+              <form onSubmit={handleReportIssue}>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Issue Title</label>
+                    <input
+                      type="text"
+                      value={issueData.title}
+                      onChange={(e) => setIssueData({...issueData, title: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      placeholder="Brief description of the issue"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Description</label>
+                    <textarea
+                      value={issueData.description}
+                      onChange={(e) => setIssueData({...issueData, description: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      rows="4"
+                      placeholder="Detailed description of the issue"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Priority</label>
+                    <select
+                      value={issueData.priority}
+                      onChange={(e) => setIssueData({...issueData, priority: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    >
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="flex gap-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowIssueForm(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+                  >
+                    Report Issue
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

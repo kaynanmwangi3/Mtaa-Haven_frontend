@@ -42,9 +42,16 @@ function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await authService.login(loginData);
+      const response = await authService.login(loginData);
       alert("Login successful!");
-      navigate("/");
+
+      // Redirect based on user role
+      const user = authService.getCurrentUser();
+      if (user?.user_type === 'landlord') {
+        navigate('/dashboard');
+      } else {
+        navigate('/properties');
+      }
     } catch (error) {
       console.error(error);
       alert(error.error || "Invalid credentials");
@@ -128,6 +135,9 @@ function LoginPage() {
               <p className="font-semibold mb-1">Demo Credentials:</p>
               <p>Email: demo@mtaahaven.com</p>
               <p>Password: demo123</p>
+              <p className="mt-2 text-xs text-gray-600">
+                <strong>Note:</strong> Google OAuth uses demo mode when credentials are not configured.
+              </p>
             </div>
 
             <p>or login with social platforms</p>
