@@ -14,6 +14,7 @@
     "@cloudinary/url-gen": "^1.22.0",
     "@popperjs/core": "^2.11.8",
     "@tailwindcss/vite": "^4.1.14",
+    "axios": "^1.12.2",
     "bootstrap": "^5.3.8",
     "boxicons": "^2.1.4",
     "react": "^19.1.1",
