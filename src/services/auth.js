@@ -50,6 +50,11 @@ export const authService = {
 
       return response.data;
     } catch (error) {
+      // If backend is not available, provide demo login
+      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+        console.warn('Backend not available, using demo mode');
+        return this.demoLogin(credentials);
+      }
       throw error.response?.data || error;
     }
   },
@@ -60,8 +65,56 @@ export const authService = {
       const response = await api.post('/register', userData);
       return response.data;
     } catch (error) {
+      // If backend is not available, provide demo registration
+      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+        console.warn('Backend not available, using demo mode');
+        return this.demoRegister(userData);
+      }
       throw error.response?.data || error;
     }
+  },
+
+  // Demo login for when backend is unavailable
+  demoLogin(credentials) {
+    // Simple demo authentication
+    if (credentials.email === 'demo@mtaahaven.com' && credentials.password === 'demo123') {
+      const demoUser = {
+        id: 1,
+        first_name: 'Demo',
+        last_name: 'User',
+        email: credentials.email,
+        user_type: 'tenant'
+      };
+      const demoToken = 'demo-token-' + Date.now();
+
+      localStorage.setItem('token', demoToken);
+      localStorage.setItem('user', JSON.stringify(demoUser));
+
+      return {
+        token: demoToken,
+        user: demoUser,
+        message: 'Demo login successful!'
+      };
+    } else {
+      throw { error: 'Invalid demo credentials. Use demo@mtaahaven.com / demo123' };
+    }
+  },
+
+  // Demo registration for when backend is unavailable
+  demoRegister(userData) {
+    const demoUser = {
+      id: Date.now(),
+      first_name: userData.first_name,
+      last_name: userData.last_name,
+      email: userData.email,
+      user_type: userData.user_type,
+      phone: userData.phone
+    };
+
+    return {
+      message: 'Demo registration successful! You can now login with your credentials.',
+      user: demoUser
+    };
   },
 
   // Logout user

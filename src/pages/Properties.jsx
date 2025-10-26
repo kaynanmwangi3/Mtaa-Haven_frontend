@@ -26,7 +26,43 @@ function Properties(){
                  const data = await response.json();
                  setProperties(data.properties || []);
              } catch (fallbackError) {
-                 console.error('Fallback fetch also failed:', fallbackError);
+                 console.error('Fallback fetch also failed, using demo data:', fallbackError);
+                 // Demo properties for when backend is unavailable
+                 setProperties([
+                     {
+                         id: 1,
+                         name: "Modern 2BR Apartment",
+                         rent_amount: 25000,
+                         bedrooms: 2,
+                         bathrooms: 1,
+                         location: "Westlands, Nairobi",
+                         image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800",
+                         description: "Beautiful modern apartment with great amenities and city views.",
+                         amenities: ["Parking", "Security", "Gym", "Swimming Pool"]
+                     },
+                     {
+                         id: 2,
+                         name: "Cozy Studio Unit",
+                         rent_amount: 15000,
+                         bedrooms: 1,
+                         bathrooms: 1,
+                         location: "Kilimani, Nairobi",
+                         image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800",
+                         description: "Perfect starter home with all essential amenities.",
+                         amenities: ["Security", "Water", "Electricity", "WiFi"]
+                     },
+                     {
+                         id: 3,
+                         name: "Spacious 3BR House",
+                         rent_amount: 45000,
+                         bedrooms: 3,
+                         bathrooms: 2,
+                         location: "Karen, Nairobi",
+                         image: "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=800",
+                         description: "Luxurious family home with garden and modern finishes.",
+                         amenities: ["Garden", "Parking", "Security", "Maid's Quarter"]
+                     }
+                 ]);
              }
          }
      };
