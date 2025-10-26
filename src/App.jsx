@@ -11,11 +11,12 @@ import BriefAbout from './pages/BriefAbout.jsx';
 import Profile from './pages/Profile.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
-import React, { Suspense } from 'react'
+import React, { Suspense, useEffect } from 'react'
 import { Cloudinary } from '@cloudinary/url-gen';
 import { auto } from '@cloudinary/url-gen/actions/resize';
 import { autoGravity } from '@cloudinary/url-gen/qualifiers/gravity';
 import { AdvancedImage } from '@cloudinary/react';
+import googleAuth from './services/googleAuth';
 
 // Lazy load components for better performance
 const LazyHome = React.lazy(() => import('./components/Home'));
@@ -34,6 +35,11 @@ const App = () => {
         .format('auto') // Optimize delivery by resizing and applying auto-format and auto-quality
         .quality('auto')
         .resize(auto().gravity(autoGravity()).width(500).height(500)); // Transform the image: auto-crop to square aspect_ratio
+
+  // Initialize Google Auth on app start
+  useEffect(() => {
+    googleAuth.initialize().catch(console.error);
+  }, []);
 
   return (
     <div>
