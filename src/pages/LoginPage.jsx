@@ -83,9 +83,17 @@ function LoginPage() {
             <div className="forgot-link">
               <a href="#">Forgot Password?</a>
             </div>
-            <button type="submit" className="btn">
-              Login
+            <button type="submit" className="btn" disabled={loading}>
+              {loading ? 'Logging in...' : 'Login'}
             </button>
+
+            {/* Demo credentials info */}
+            <div className="mt-4 p-3 bg-gray-100 rounded-md text-sm text-gray-700">
+              <p className="font-semibold mb-1">Demo Credentials:</p>
+              <p>Email: demo@mtaahaven.com</p>
+              <p>Password: demo123</p>
+            </div>
+
             <p>or login with social platforms</p>
             <div className="social-icons">
               <a href="#">

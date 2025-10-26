@@ -1,18 +1,27 @@
 import '../App.css'
 import {useState,useEffect} from 'react';
-import { FaBed, FaBath, FaHeart } from 'react-icons/fa';
+import { FaBed, FaBath, FaHeart, FaSort } from 'react-icons/fa';
 import './Properties.css';
 import PropertyModal from '../components/PropertyModal';
+import SearchFilters from '../components/SearchFilters';
 import api from '../services/auth';
 
 function Properties(){
      const [properties, setProperties] = useState([])
+     const [filteredProperties, setFilteredProperties] = useState([])
      const [selectedProperty, setSelectedProperty] = useState(null);
      const [favorites, setFavorites] = useState(new Set());
+     const [sortBy, setSortBy] = useState('name');
+     const [sortOrder, setSortOrder] = useState('asc');
+     const [currentFilters, setCurrentFilters] = useState({});
 
      useEffect(()=>{
          fetchProperties();
      },[])
+
+     useEffect(() => {
+         applyFiltersAndSort();
+     }, [properties, currentFilters, sortBy, sortOrder]);
 
      const fetchProperties = async () => {
          try {
@@ -26,7 +35,43 @@ function Properties(){
                  const data = await response.json();
                  setProperties(data.properties || []);
              } catch (fallbackError) {
-                 console.error('Fallback fetch also failed:', fallbackError);
+                 console.error('Fallback fetch also failed, using demo data:', fallbackError);
+                 // Demo properties for when backend is unavailable
+                 setProperties([
+                     {
+                         id: 1,
+                         name: "Modern 2BR Apartment",
+                         rent_amount: 25000,
+                         bedrooms: 2,
+                         bathrooms: 1,
+                         location: "Westlands, Nairobi",
+                         image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800",
+                         description: "Beautiful modern apartment with great amenities and city views.",
+                         amenities: ["Parking", "Security", "Gym", "Swimming Pool"]
+                     },
+                     {
+                         id: 2,
+                         name: "Cozy Studio Unit",
+                         rent_amount: 15000,
+                         bedrooms: 1,
+                         bathrooms: 1,
+                         location: "Kilimani, Nairobi",
+                         image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800",
+                         description: "Perfect starter home with all essential amenities.",
+                         amenities: ["Security", "Water", "Electricity", "WiFi"]
+                     },
+                     {
+                         id: 3,
+                         name: "Spacious 3BR House",
+                         rent_amount: 45000,
+                         bedrooms: 3,
+                         bathrooms: 2,
+                         location: "Karen, Nairobi",
+                         image: "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=800",
+                         description: "Luxurious family home with garden and modern finishes.",
+                         amenities: ["Garden", "Parking", "Security", "Maid's Quarter"]
+                     }
+                 ]);
              }
          }
      };
@@ -51,6 +96,99 @@ function Properties(){
          setSelectedProperty(null);
      };
 
+     const handleSearch = (query, filters) => {
+         setCurrentFilters({ ...filters, searchQuery: query });
+     };
+
+     const handleFilterChange = (filters) => {
+         setCurrentFilters(filters);
+     };
+
+     const applyFiltersAndSort = () => {
+         let filtered = [...properties];
+
+         // Apply search query
+         if (currentFilters.searchQuery) {
+             const query = currentFilters.searchQuery.toLowerCase();
+             filtered = filtered.filter(property =>
+                 property.name.toLowerCase().includes(query) ||
+                 property.location.toLowerCase().includes(query) ||
+                 property.description?.toLowerCase().includes(query) ||
+                 property.amenities?.some(amenity => amenity.toLowerCase().includes(query))
+             );
+         }
+
+         // Apply price filters
+         if (currentFilters.minPrice) {
+             filtered = filtered.filter(property => property.rent_amount >= parseInt(currentFilters.minPrice));
+         }
+         if (currentFilters.maxPrice) {
+             filtered = filtered.filter(property => property.rent_amount <= parseInt(currentFilters.maxPrice));
+         }
+
+         // Apply bedroom filter
+         if (currentFilters.bedrooms) {
+             filtered = filtered.filter(property => property.bedrooms >= parseInt(currentFilters.bedrooms));
+         }
+
+         // Apply location filter
+         if (currentFilters.location) {
+             filtered = filtered.filter(property => property.location === currentFilters.location);
+         }
+
+         // Apply property type filter
+         if (currentFilters.propertyType) {
+             filtered = filtered.filter(property => property.type === currentFilters.propertyType);
+         }
+
+         // Apply amenities filter
+         if (currentFilters.amenities && currentFilters.amenities.length > 0) {
+             filtered = filtered.filter(property =>
+                 currentFilters.amenities.every(amenity =>
+                     property.amenities?.includes(amenity)
+                 )
+             );
+         }
+
+         // Apply sorting
+         filtered.sort((a, b) => {
+             let aValue, bValue;
+
+             switch (sortBy) {
+                 case 'price':
+                     aValue = a.rent_amount;
+                     bValue = b.rent_amount;
+                     break;
+                 case 'bedrooms':
+                     aValue = a.bedrooms;
+                     bValue = b.bedrooms;
+                     break;
+                 case 'name':
+                 default:
+                     aValue = a.name.toLowerCase();
+                     bValue = b.name.toLowerCase();
+                     break;
+             }
+
+             if (sortOrder === 'asc') {
+                 return aValue > bValue ? 1 : -1;
+             } else {
+                 return aValue < bValue ? 1 : -1;
+             }
+         });
+
+         setFilteredProperties(filtered);
+     };
+
+     const toggleSort = (field) => {
+         if (sortBy === field) {
+             setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+         } else {
+             setSortBy(field);
+             setSortOrder('asc');
+         }
+     };
+
      return(
          <div className="px-8 py-12 bg-black">
              <div className="mb-8">
@@ -58,8 +196,36 @@ function Properties(){
                  <p className="text-gray-300 text-lg">Find your perfect rental property in the community</p>
              </div>
 
+             {/* Search and Filters */}
+             <SearchFilters onSearch={handleSearch} onFilterChange={handleFilterChange} />
+
+             {/* Sort Controls */}
+             <div className="flex justify-between items-center mb-6">
+                 <p className="text-white">
+                     Showing {filteredProperties.length} of {properties.length} properties
+                 </p>
+                 <div className="flex gap-4">
+                     <select
+                         value={`${sortBy}-${sortOrder}`}
+                         onChange={(e) => {
+                             const [field, order] = e.target.value.split('-');
+                             setSortBy(field);
+                             setSortOrder(order);
+                         }}
+                         className="px-4 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                     >
+                         <option value="name-asc">Name (A-Z)</option>
+                         <option value="name-desc">Name (Z-A)</option>
+                         <option value="price-asc">Price (Low to High)</option>
+                         <option value="price-desc">Price (High to Low)</option>
+                         <option value="bedrooms-asc">Bedrooms (Low to High)</option>
+                         <option value="bedrooms-desc">Bedrooms (High to Low)</option>
+                     </select>
+                 </div>
+             </div>
+
              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-               {properties.map((property) => (
+               {filteredProperties.map((property) => (
                  <div
                    key={property.id}
                    className="relative bg-black h-150 overflow-hidden shadow-lg group transition-transform transform hover:scale-105"
