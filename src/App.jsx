@@ -8,6 +8,8 @@ import Title from './components/Title.jsx';
 import Footer from './components/Footer.jsx';
 import Properties from './pages/Properties.jsx';
 import BriefAbout from './pages/BriefAbout.jsx';
+import Profile from './pages/Profile.jsx';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
 import React from 'react'
 import { Cloudinary } from '@cloudinary/url-gen';
 import { auto } from '@cloudinary/url-gen/actions/resize';
@@ -16,7 +18,7 @@ import { AdvancedImage } from '@cloudinary/react';
 
 const App = () => {
   const cld = new Cloudinary({ cloud: { cloudName: 'djtahjahe' } });
-  
+
   // Use this sample image or upload your own via the Media Library
   const img = cld
         .image('cld-sample-5')
@@ -32,8 +34,17 @@ const App = () => {
       <Route path='/' element={<Bridge/>}>
         <Route index element={<Home/>} />
         <Route path="login" element={<LoginPage />} />
-        <Route path="properties" element={<Properties/>} />
+        <Route path="properties" element={
+          <ProtectedRoute>
+            <Properties/>
+          </ProtectedRoute>
+        } />
         <Route path="about" element={<BriefAbout/>} />
+        <Route path="profile" element={
+          <ProtectedRoute>
+            <Profile/>
+          </ProtectedRoute>
+        } />
 
       </Route>
     </Routes>

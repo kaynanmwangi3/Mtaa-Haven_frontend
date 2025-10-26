@@ -1,54 +1,51 @@
 // src/pages/LoginPage.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./LoginPage.css";
 import { useNavigate } from "react-router-dom";
+import { authService } from "../services/auth";
 
 function LoginPage() {
   const [isActive, setIsActive] = useState(false);
-  const [loginData, setLoginData] = useState({email: "",first_name: "",last_name: "",password: "",});
+  const [loginData, setLoginData] = useState({email: "", password: ""});
   const [registerData, setRegisterData] = useState({email: "",first_name: "",last_name: "",phone: "",user_type: "",password: "",});
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if user is already authenticated
+    if (authService.isAuthenticated()) {
+      navigate("/");
+    }
+  }, [navigate]);
+
   const handleRegister = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
-      const res = await fetch(" http://127.0.0.1:5000/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(registerData),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        alert("Registration successful!");
-        setIsActive(false);
-      } else {
-        alert(data.error || "Registration failed");
-      }
+      await authService.register(registerData);
+      alert("Registration successful! Please login.");
+      setIsActive(false);
+      setRegisterData({email: "",first_name: "",last_name: "",phone: "",user_type: "",password: ""});
     } catch (error) {
       console.error(error);
-      alert("Server error during registration.");
+      alert(error.error || "Registration failed");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
-      const res = await fetch(" http://127.0.0.1:5000/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(loginData),
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (res.ok) {
-        alert("Login successful!");
-        navigate("/");
-        console.log(data.user);
-      } else {
-        alert(data.error || "Invalid credentials");
-      }
+      await authService.login(loginData);
+      alert("Login successful!");
+      navigate("/");
     } catch (error) {
       console.error(error);
-      alert("Server error during login.");
+      alert(error.error || "Invalid credentials");
+    } finally {
+      setLoading(false);
     }
   };
 
