@@ -1,7 +1,7 @@
 import axios from 'axios';
 import googleAuth from './googleAuth';
 
-const API_BASE_URL = 'http://127.0.0.1:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://mtaa-fundi-backend.onrender.com/api';
 
 // Create axios instance with base configuration
 const api = axios.create({

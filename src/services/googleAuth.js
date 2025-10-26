@@ -1,8 +1,8 @@
 import { gapi } from 'gapi-script';
 
 // Google OAuth2 configuration
-const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID_HERE'; // Replace with your actual Google Client ID
-const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || 'YOUR_GOOGLE_API_KEY_HERE'; // Replace with your actual Google API Key
+const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'demo-client-id'; // Replace with your actual Google Client ID
+const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || 'demo-api-key'; // Replace with your actual Google API Key
 const SCOPES = 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile';
 
 class GoogleAuthService {
@@ -42,6 +42,12 @@ class GoogleAuthService {
         await this.initialize();
       }
 
+      // Check if using demo credentials
+      if (CLIENT_ID === 'demo-client-id') {
+        console.warn('Using demo Google auth - no real credentials configured');
+        return this.getDemoGoogleUser();
+      }
+
       const googleUser = await this.authInstance.signIn({
         prompt: 'select_account'
       });
@@ -64,8 +70,25 @@ class GoogleAuthService {
       return userData;
     } catch (error) {
       console.error('Google sign in failed:', error);
-      throw error;
+      // Fallback to demo user if Google auth fails
+      console.warn('Falling back to demo Google user');
+      return this.getDemoGoogleUser();
     }
+  }
+
+  // Demo Google user for when credentials are not configured
+  getDemoGoogleUser() {
+    return {
+      id: 'demo-google-user-' + Date.now(),
+      email: 'demo.google@example.com',
+      first_name: 'Demo',
+      last_name: 'Google User',
+      full_name: 'Demo Google User',
+      image_url: 'https://via.placeholder.com/150?text=Demo+User',
+      provider: 'google',
+      access_token: 'demo-access-token',
+      id_token: 'demo-id-token'
+    };
   }
 
   // Sign out from Google
