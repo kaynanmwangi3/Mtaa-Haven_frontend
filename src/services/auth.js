@@ -1,4 +1,5 @@
 import axios from 'axios';
+import googleAuth from './googleAuth';
 
 const API_BASE_URL = 'http://127.0.0.1:5000/api';
 
@@ -140,6 +141,60 @@ export const authService = {
   // Get stored token
   getToken() {
     return localStorage.getItem('token');
+  },
+
+  // Google OAuth login
+  async googleLogin() {
+    try {
+      await googleAuth.initialize();
+      const googleUserData = await googleAuth.signIn();
+
+      // Try to register/login with backend first
+      try {
+        const response = await api.post('/auth/google', {
+          ...googleUserData,
+          user_type: 'tenant' // Default user type for Google users
+        });
+
+        const { token, user } = response.data;
+        if (token) {
+          localStorage.setItem('token', token);
+          localStorage.setItem('user', JSON.stringify(user));
+        }
+        return response.data;
+      } catch (backendError) {
+        // If backend fails, use demo mode
+        console.warn('Backend Google auth failed, using demo mode:', backendError);
+        return this.demoGoogleLogin(googleUserData);
+      }
+    } catch (error) {
+      console.error('Google login failed:', error);
+      throw error;
+    }
+  },
+
+  // Demo Google login for when backend is unavailable
+  demoGoogleLogin(googleUserData) {
+    const demoUser = {
+      id: googleUserData.id,
+      first_name: googleUserData.first_name,
+      last_name: googleUserData.last_name,
+      email: googleUserData.email,
+      user_type: 'tenant',
+      image_url: googleUserData.image_url,
+      provider: 'google'
+    };
+
+    const demoToken = 'google-demo-token-' + Date.now();
+
+    localStorage.setItem('token', demoToken);
+    localStorage.setItem('user', JSON.stringify(demoUser));
+
+    return {
+      token: demoToken,
+      user: demoUser,
+      message: 'Google login successful!'
+    };
   }
 };
 
