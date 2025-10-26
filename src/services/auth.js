@@ -1,7 +1,7 @@
 import axios from 'axios';
 import googleAuth from './googleAuth';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://mtaa-fundi-backend.onrender.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000/api';
 
 // Create axios instance with base configuration
 const api = axios.create({
@@ -119,11 +119,16 @@ export const authService = {
   },
 
   // Logout user
-  logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    // Optional: Call backend logout endpoint if needed
-    return api.post('/logout');
+  async logout() {
+    try {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      // Optional: Call backend logout endpoint if needed
+      await api.post('/logout');
+    } catch (error) {
+      // Even if backend logout fails, clear local storage
+      console.warn('Backend logout failed, but local session cleared:', error);
+    }
   },
 
   // Get current user

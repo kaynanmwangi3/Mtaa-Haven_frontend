@@ -34,7 +34,8 @@ function Properties(){
 
              const url = `/properties${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
              const response = await api.get(url);
-             setProperties(response.data.properties || []);
+             const propertiesData = response.data.properties || response.data || [];
+             setProperties(Array.isArray(propertiesData) ? propertiesData : []);
          } catch (error) {
              console.error('Error fetching properties:', error);
              // Use demo data as fallback
