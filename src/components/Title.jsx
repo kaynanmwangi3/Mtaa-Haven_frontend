@@ -26,7 +26,10 @@ function Title(){
             </div>
             <div class="flex gap-3 pr-5 ">
               <div className="search-container">
-                <input type="text" placeholder="Search..." className="search-input bg-white" />
+                <input 
+                type="text" 
+                placeholder="Search property..."
+                className="search-input bg-white" />
                 <i className="bx bx-search search-icon"></i>
               </div>
               <button class="text-white log-out-btn">
