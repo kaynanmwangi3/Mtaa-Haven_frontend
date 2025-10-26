@@ -1,3 +1,12 @@
+import './App.css'
+import Home from './components/Home'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Bridge from './services/Bridge';
+import LoginPage from './pages/LoginPage.jsx';
+import Navbar from './components/Navbar.jsx';
+import Title from './components/Title.jsx';
+import Footer from './components/Footer.jsx';
+import Properties from './pages/Properties.jsx';
 import React from 'react'
 import { Cloudinary } from '@cloudinary/url-gen';
 import { auto } from '@cloudinary/url-gen/actions/resize';
@@ -14,7 +23,21 @@ const App = () => {
         .quality('auto')
         .resize(auto().gravity(autoGravity()).width(500).height(500)); // Transform the image: auto-crop to square aspect_ratio
 
-  return (<AdvancedImage cldImg={img}/>);
-};
+  return (
+    <div>
+    <Navbar/>
+    <Title/>
+    <Routes>
+      <Route path='/' element={<Bridge/>}>
+        <Route index element={<Home/>} />
+        <Route path="login" element={<LoginPage />} />
+        <Route path="properties" element={<Properties/>} />
+
+      </Route>
+    </Routes>
+    <Footer/>
+    </div>
+  )
+}
 
 export default App
