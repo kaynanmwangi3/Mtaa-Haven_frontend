@@ -7,6 +7,7 @@ import Navbar from './components/Navbar.jsx';
 import Title from './components/Title.jsx';
 import Footer from './components/Footer.jsx';
 import Properties from './pages/Properties.jsx';
+import BriefAbout from './pages/BriefAbout.jsx';
 import React from 'react'
 import { Cloudinary } from '@cloudinary/url-gen';
 import { auto } from '@cloudinary/url-gen/actions/resize';
@@ -32,6 +33,7 @@ const App = () => {
         <Route index element={<Home/>} />
         <Route path="login" element={<LoginPage />} />
         <Route path="properties" element={<Properties/>} />
+        <Route path="about" element={<BriefAbout/>} />
 
       </Route>
     </Routes>
