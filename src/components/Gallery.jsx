@@ -4,12 +4,12 @@ import "../App.css"; // external CSS for the animation
 export default function Gallery() {
   // Add as many images as you want here
   const images = [
-    "https://picsum.photos/300/200?random=1",
-    "https://picsum.photos/300/200?random=2",
-    "https://picsum.photos/300/200?random=3",
-    "https://picsum.photos/300/200?random=4",
-    "https://picsum.photos/300/200?random=5",
-    "https://picsum.photos/300/200?random=6",
+    "https://cdn.mos.cms.futurecdn.net/zisziefsfzb4YXpdixfhFA.jpg",
+    "https://niche.scene7.com/is/image/NicheDesign/25Mercer-4-1B-1?$Blog%20Image$",
+    "https://img.freepik.com/free-photo/house-forest-covered-greenery-sunlight-daytime_181624-9634.jpg?semt=ais_hybrid&w=740&q=80",
+    "https://media.istockphoto.com/id/1437629749/photo/land-plot-in-aerial-view-in-chiang-mai-of-thailand.jpg?s=612x612&w=0&k=20&c=07y-L9_WJwFGmvvhrZULYbfTfDtUPHnxJhbxWPTiqYg=",
+    "https://hips.hearstapps.com/hmg-prod/images/west-virginia-gray-cottage-64dd6bb056057.jpg?crop=0.943xw:0.817xh;0.0224xw,0.0932xh",
+    "https://media.istockphoto.com/id/454339695/photo/new-constructed-home-for-sale.jpg?s=612x612&w=0&k=20&c=-X5SNl-M9GfSb1fJSs62BwLd5DqxVnFbijJISIUgfY8=",
   ];
 
   return (
