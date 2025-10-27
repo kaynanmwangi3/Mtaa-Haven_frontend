@@ -8,8 +8,8 @@ function Title(){
   const isAuthenticated = authService.isAuthenticated();
   const user = authService.getCurrentUser();
 
-  const handleLogout = () => {
-    authService.logout();
+  const handleLogout = async () => {
+    await authService.logout();
     navigate('/login');
   };
 

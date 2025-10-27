@@ -1,8 +1,8 @@
 import React from "react";
-import "../App.css"; // external CSS for the animation
+import "../App.css"; 
 
 export default function Gallery() {
-  // Add as many images as you want here
+  
   const images = [
     "https://cdn.mos.cms.futurecdn.net/zisziefsfzb4YXpdixfhFA.jpg",
     "https://niche.scene7.com/is/image/NicheDesign/25Mercer-4-1B-1?$Blog%20Image$",
