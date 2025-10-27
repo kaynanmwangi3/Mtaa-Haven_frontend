@@ -16,7 +16,7 @@ export default function Footer() {
       <div className=" mx-auto grid md:grid-cols-4 gap-10 border-t border-gray-700 pt-10">
         {/* Logo + Description */}
         <div>
-          <h1 className="text-3xl font-serif mb-4 tracking-wide">RESORTO</h1>
+          <h2 className="text-3xl font-serif mb-4 tracking-wide">MTAA HAVEN</h2>
           <p className="text-gray-400 text-sm leading-relaxed mb-6">
             Be the first to know about exclusive offers, seasonal discounts, and
             expert laundry tips. Sign up today for a fresher tomorrow!
