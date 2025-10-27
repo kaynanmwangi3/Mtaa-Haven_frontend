@@ -1,8 +1,8 @@
 import React from "react";
-import "../App.css"; // external CSS for the animation
+import "../App.css"; 
 
 export default function Gallery() {
-  // Add as many images as you want here
+  
   const images = [
     "https://picsum.photos/300/200?random=1",
     "https://picsum.photos/300/200?random=2",

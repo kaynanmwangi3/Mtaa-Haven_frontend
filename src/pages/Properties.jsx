@@ -34,52 +34,12 @@ function Properties(){
 
              const url = `/properties${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
              const response = await api.get(url);
-             const propertiesData = response.data.properties || response.data || [];
+             const propertiesData = response.data;
              setProperties(Array.isArray(propertiesData) ? propertiesData : []);
          } catch (error) {
              console.error('Error fetching properties:', error);
-             // Use demo data as fallback
-             setProperties([
-                 {
-                     id: 1,
-                     name: "Modern 2BR Apartment",
-                     rent_amount: 25000,
-                     bedrooms: 2,
-                     bathrooms: 1,
-                     location: "Westlands, Nairobi",
-                     image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800",
-                     type: "Apartment",
-                     description: "Beautiful modern apartment with great amenities and city views.",
-                     amenities: ["Parking", "Security", "Gym", "Swimming Pool"],
-                     size: 1200
-                 },
-                 {
-                     id: 2,
-                     name: "Cozy Studio Unit",
-                     rent_amount: 15000,
-                     bedrooms: 1,
-                     bathrooms: 1,
-                     location: "Kilimani, Nairobi",
-                     image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800",
-                     type: "Studio",
-                     description: "Perfect starter home with all essential amenities.",
-                     amenities: ["Security", "Water", "Electricity", "WiFi"],
-                     size: 600
-                 },
-                 {
-                     id: 3,
-                     name: "Spacious 3BR House",
-                     rent_amount: 45000,
-                     bedrooms: 3,
-                     bathrooms: 2,
-                     location: "Karen, Nairobi",
-                     image: "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=800",
-                     type: "House",
-                     description: "Luxurious family home with garden and modern finishes.",
-                     amenities: ["Garden", "Parking", "Security", "Maid's Quarter"],
-                     size: 2500
-                 }
-             ]);
+             // Set empty array on error - auth interceptor will handle 401 redirects
+             setProperties([]);
          }
      };
 
@@ -211,32 +171,6 @@ function Properties(){
              <div className="mb-8">
                  <h1 className="text-4xl font-bold text-white mb-4">Available Properties</h1>
                  <p className="text-gray-300 text-lg">Find your perfect rental property in the community</p>
-             </div>
-
-             {/* Search and Filters */}
-             <SearchFilters onSearch={handleSearch} onFilterChange={handleFilterChange} />
-
-             {/* Sort Options */}
-             <div className="flex justify-between items-center mb-6">
-                 <p className="text-white">Showing {filteredProperties.length} properties</p>
-                 <div className="flex items-center gap-4">
-                     <span className="text-white">Sort by:</span>
-                     <select
-                         value={sortBy}
-                         onChange={(e) => handleSort(e.target.value)}
-                         className="px-3 py-2 bg-gray-800 text-white border border-gray-600 rounded-md"
-                     >
-                         <option value="name">Name</option>
-                         <option value="rent_amount">Price</option>
-                         <option value="bedrooms">Bedrooms</option>
-                     </select>
-                     <button
-                         onClick={() => handleSort(sortBy)}
-                         className="text-white hover:text-gray-300"
-                     >
-                         <FaSort className={`transform ${sortOrder === 'desc' ? 'rotate-180' : ''}`} />
-                     </button>
-                 </div>
              </div>
 
              {/* Search and Filters */}
