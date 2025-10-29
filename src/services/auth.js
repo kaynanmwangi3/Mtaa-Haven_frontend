@@ -41,19 +41,19 @@ export const authService = {
   async login(credentials) {
     try {
       const response = await api.post('/login', credentials);
+      console.log('Login response:', response.data);
       const { token, user } = response.data;
 
-      if (token) {
+      if (token && user) {
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
+        console.log('Token saved:', token); 
       }
-
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
     }
   },
-
   // Register user
   async register(userData) {
     try {
@@ -63,8 +63,6 @@ export const authService = {
       throw error.response?.data || error;
     }
   },
-
-
   // Logout user
   async logout() {
     try {
@@ -77,13 +75,11 @@ export const authService = {
       console.warn('Backend logout failed, but local session cleared:', error);
     }
   },
-
   // Get current user
   getCurrentUser() {
     const user = localStorage.getItem('user');
     return user ? JSON.parse(user) : null;
   },
-
   // Check if user is authenticated
   isAuthenticated() {
     const token = localStorage.getItem('token');

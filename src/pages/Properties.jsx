@@ -25,6 +25,7 @@ function Properties(){
 
      const fetchProperties = async (filters = {}) => {
          try {
+            console.log("Fetching properties...");
              const queryParams = new URLSearchParams();
 
              if (filters.location) queryParams.append('location', filters.location);
@@ -33,8 +34,10 @@ function Properties(){
              if (filters.type) queryParams.append('type', filters.type);
 
              const url = `/properties${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+             console.log("Request URL:", url);
              const response = await api.get(url);
-             const propertiesData = response.data;
+              console.log("Response:", response.data.properties);
+             const propertiesData = response.data.properties;
              setProperties(Array.isArray(propertiesData) ? propertiesData : []);
          } catch (error) {
              console.error('Error fetching properties:', error);
@@ -78,7 +81,7 @@ function Properties(){
          if (currentFilters.searchQuery) {
              const query = currentFilters.searchQuery.toLowerCase();
              filtered = filtered.filter(property =>
-                 property.name.toLowerCase().includes(query) ||
+                 property.title.toLowerCase().includes(query) ||
                  property.location.toLowerCase().includes(query) ||
                  property.description?.toLowerCase().includes(query) ||
                  property.amenities?.some(amenity => amenity.toLowerCase().includes(query))
@@ -132,8 +135,8 @@ function Properties(){
                      break;
                  case 'name':
                  default:
-                     aValue = a.name.toLowerCase();
-                     bValue = b.name.toLowerCase();
+                     aValue = a.title.toLowerCase();
+                     bValue = b.title.toLowerCase();
                      break;
              }
 
