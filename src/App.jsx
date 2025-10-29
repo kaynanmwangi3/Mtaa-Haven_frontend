@@ -1,34 +1,77 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
+import Home from './components/Home'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Bridge from './services/Bridge';
+import LoginPage from './pages/LoginPage.jsx';
+import Navbar from './components/Navbar.jsx';
+import Title from './components/Title.jsx';
+import Footer from './components/Footer.jsx';
+import Properties from './pages/Properties.jsx';
+import BriefAbout from './pages/BriefAbout.jsx';
+import Profile from './pages/Profile.jsx';
+import Dashboard from './pages/Dashboard.jsx';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
+import React, { Suspense, useEffect } from 'react'
+import { Cloudinary } from '@cloudinary/url-gen';
+import { auto } from '@cloudinary/url-gen/actions/resize';
+import { autoGravity } from '@cloudinary/url-gen/qualifiers/gravity';
+import { AdvancedImage } from '@cloudinary/react';
+import googleAuth from './services/googleAuth';
 
-function App() {
-  const [count, setCount] = useState(0)
+// Lazy load components for better performance
+const LazyHome = React.lazy(() => import('./components/Home'));
+const LazyProperties = React.lazy(() => import('./pages/Properties'));
+const LazyDashboard = React.lazy(() => import('./pages/Dashboard'));
+const LazyProfile = React.lazy(() => import('./pages/Profile'));
+const LazyBriefAbout = React.lazy(() => import('./pages/BriefAbout'));
+const LazyLoginPage = React.lazy(() => import('./pages/LoginPage'));
+
+const App = () => {
+  const cld = new Cloudinary({ cloud: { cloudName: 'djtahjahe' } });
+
+  // Use this sample image or upload your own via the Media Library
+  const img = cld
+        .image('cld-sample-5')
+        .format('auto') // Optimize delivery by resizing and applying auto-format and auto-quality
+        .quality('auto')
+        .resize(auto().gravity(autoGravity()).width(500).height(500)); // Transform the image: auto-crop to square aspect_ratio
+
+  // Initialize Google Auth on app start
+  useEffect(() => {
+    googleAuth.initialize().catch(console.error);
+  }, []);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div>
+    <Navbar/>
+    <Title/>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-black text-white">Loading...</div>}>
+      <Routes>
+        <Route path='/' element={<Bridge/>}>
+          <Route index element={<LazyHome/>} />
+          <Route path="login" element={<LazyLoginPage />} />
+          <Route path="properties" element={
+            <ProtectedRoute>
+              <LazyProperties/>
+            </ProtectedRoute>
+          } />
+          <Route path="dashboard" element={
+            <ProtectedRoute>
+              <LazyDashboard/>
+            </ProtectedRoute>
+          } />
+          <Route path="about" element={<LazyBriefAbout/>} />
+          <Route path="profile" element={
+            <ProtectedRoute>
+              <LazyProfile/>
+            </ProtectedRoute>
+          } />
+
+        </Route>
+      </Routes>
+    </Suspense>
+    <Footer/>
+    </div>
   )
 }
 

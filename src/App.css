@@ -1,42 +1,55 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+@import "tailwindcss";
+
+.reviews-section {
+  background: linear-gradient(180deg, #0d0d0d 0%, #151515 100%);
+  font-family: 'Poppins', sans-serif;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+.review-card:hover {
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.clients-section {
+  position: relative;
+  font-family: "Poppins", sans-serif;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+/* Continuous scrolling effect */
+@keyframes scrollText {
+  0% {
+    transform: translateX(0);
   }
-  to {
-    transform: rotate(360deg);
+  100% {
+    transform: translateX(-50%);
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+.clients-scroll {
+  display: inline-flex;
+  animation: scrollText 20s linear infinite;
+}
+
+/* Smooth infinite horizontal scroll animation */
+@keyframes scrollX {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
   }
 }
 
-.card {
-  padding: 2em;
+.scroll-section {
+  font-family: "Poppins", sans-serif;
 }
 
-.read-the-docs {
-  color: #888;
+.scroll-track {
+  width: max-content;
+  display: flex;
+  align-items: center;
+  animation: scrollX 25s linear infinite;
 }
+
+.scroll-container:hover .scroll-track {
+  animation-play-state: paused; /* Pause on hover */
+}
+

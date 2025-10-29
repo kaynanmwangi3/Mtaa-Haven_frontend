@@ -1,0 +1,91 @@
+.cld {
+  background: rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+}
+.yoh{
+  position:sticky;
+}
+.cta-btn{
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+.cta-btn:hover {
+  background-color: white;
+  transform: scale(1.2);
+}
+.link-tag{
+  text-decoration: none;
+  color:white
+}
+.link-tag:hover{
+  color:black;
+}
+.search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  height: 40px;
+  width: 40px; /* initial width = icon size */
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  transition: width 0.4s ease; /* smooth expansion */
+  border: 1px solid #ccc;
+}
+
+/* when hovered or when the input is focused, expand */
+.search-container:hover,
+.search-container:focus-within {
+  width: 250px; /* expanded width */
+}
+
+/* search icon */
+.search-icon {
+  position: absolute;
+  right: 10px;
+  font-size: 18px;
+  color: black;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.search-container:hover .search-icon {
+  color: #007bff;
+}
+
+/* input field styling */
+.search-input {
+  position: absolute;
+  right: 35px; /* space for icon */
+  width: 0; /* start invisible */
+  opacity: 0;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  transition: width 0.4s ease, opacity 0.4s ease;
+}
+
+/* when container is hovered or input focused */
+.search-container:hover .search-input,
+.search-container:focus-within .search-input {
+  width: 150px;
+  opacity: 1;
+}
+.log-out-btn{
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+.log-out-btn:hover{
+  transform: scale(1.4);
+}
+.link-tag-links{
+  text-decoration: none;
+  color: white;
+}
+.link-tag-links:hover{
+  text-decoration: underline;
+}
