@@ -1,5 +1,4 @@
 import axios from 'axios';
-import googleAuth from './googleAuth';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000/api';
 
@@ -51,11 +50,6 @@ export const authService = {
 
       return response.data;
     } catch (error) {
-      // If backend is not available, provide demo login
-      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
-        console.warn('Backend not available, using demo mode');
-        return this.demoLogin(credentials);
-      }
       throw error.response?.data || error;
     }
   },
@@ -66,57 +60,10 @@ export const authService = {
       const response = await api.post('/register', userData);
       return response.data;
     } catch (error) {
-      // If backend is not available, provide demo registration
-      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
-        console.warn('Backend not available, using demo mode');
-        return this.demoRegister(userData);
-      }
       throw error.response?.data || error;
     }
   },
 
-  // Demo login for when backend is unavailable
-  demoLogin(credentials) {
-    // Simple demo authentication
-    if (credentials.email === 'demo@mtaahaven.com' && credentials.password === 'demo123') {
-      const demoUser = {
-        id: 1,
-        first_name: 'Demo',
-        last_name: 'User',
-        email: credentials.email,
-        user_type: 'tenant'
-      };
-      const demoToken = 'demo-token-' + Date.now();
-
-      localStorage.setItem('token', demoToken);
-      localStorage.setItem('user', JSON.stringify(demoUser));
-
-      return {
-        token: demoToken,
-        user: demoUser,
-        message: 'Demo login successful!'
-      };
-    } else {
-      throw { error: 'Invalid demo credentials. Use demo@mtaahaven.com / demo123' };
-    }
-  },
-
-  // Demo registration for when backend is unavailable
-  demoRegister(userData) {
-    const demoUser = {
-      id: Date.now(),
-      first_name: userData.first_name,
-      last_name: userData.last_name,
-      email: userData.email,
-      user_type: userData.user_type,
-      phone: userData.phone
-    };
-
-    return {
-      message: 'Demo registration successful! You can now login with your credentials.',
-      user: demoUser
-    };
-  },
 
   // Logout user
   async logout() {
@@ -148,59 +95,6 @@ export const authService = {
     return localStorage.getItem('token');
   },
 
-  // Google OAuth login
-  async googleLogin() {
-    try {
-      await googleAuth.initialize();
-      const googleUserData = await googleAuth.signIn();
-
-      // Try to register/login with backend first
-      try {
-        const response = await api.post('/auth/google', {
-          ...googleUserData,
-          user_type: 'tenant' // Default user type for Google users
-        });
-
-        const { token, user } = response.data;
-        if (token) {
-          localStorage.setItem('token', token);
-          localStorage.setItem('user', JSON.stringify(user));
-        }
-        return response.data;
-      } catch (backendError) {
-        // If backend fails, use demo mode
-        console.warn('Backend Google auth failed, using demo mode:', backendError);
-        return this.demoGoogleLogin(googleUserData);
-      }
-    } catch (error) {
-      console.error('Google login failed:', error);
-      throw error;
-    }
-  },
-
-  // Demo Google login for when backend is unavailable
-  demoGoogleLogin(googleUserData) {
-    const demoUser = {
-      id: googleUserData.id,
-      first_name: googleUserData.first_name,
-      last_name: googleUserData.last_name,
-      email: googleUserData.email,
-      user_type: 'tenant',
-      image_url: googleUserData.image_url,
-      provider: 'google'
-    };
-
-    const demoToken = 'google-demo-token-' + Date.now();
-
-    localStorage.setItem('token', demoToken);
-    localStorage.setItem('user', JSON.stringify(demoUser));
-
-    return {
-      token: demoToken,
-      user: demoUser,
-      message: 'Google login successful!'
-    };
-  }
 };
 
 export default api;

@@ -4,9 +4,9 @@ import "./Home.css";
 function Navbar() {
   return (
     <div>
-      <div class="yoh ">
-        <div class="flex items-center justify-between p-1 cld">
-          <div class="flex gap-3">
+      <div className="yoh ">
+        <div className="flex items-center justify-between p-1 cld">
+          <div className="flex gap-3">
             <button className="text-white">
               <i className="bx bxl-facebook"></i>
               <p>Facebook</p>
@@ -25,7 +25,7 @@ function Navbar() {
             </button>
           </div>
           <div>
-            <h5 class="text-white  ">
+            <h5 className="text-white  ">
               123 Maple Street, Springfield, IL 62704
             </h5>
           </div>
