@@ -11,6 +11,7 @@ import BriefAbout from './pages/BriefAbout.jsx';
 import Profile from './pages/Profile.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import TenantDashboard from './pages/TenantDashboard.jsx';
+import LandlordDashboard from './pages/LandlordDashboard.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import React, { Suspense } from 'react'
 // Lazy load components for better performance
@@ -18,6 +19,7 @@ const LazyHome = React.lazy(() => import('./components/Home'));
 const LazyProperties = React.lazy(() => import('./pages/Properties'));
 const LazyDashboard = React.lazy(() => import('./pages/Dashboard'));
 const LazyTenantDashboard = React.lazy(() => import('./pages/TenantDashboard'));
+const LazyLandlordDashboard = React.lazy(() => import('./pages/LandlordDashboard'));
 const LazyProfile = React.lazy(() => import('./pages/Profile'));
 const LazyBriefAbout = React.lazy(() => import('./pages/BriefAbout'));
 const LazyLoginPage = React.lazy(() => import('./pages/LoginPage'));
@@ -41,6 +43,11 @@ const App = () => {
           <Route path="dashboard" element={
             <ProtectedRoute>
               <LazyTenantDashboard/>
+            </ProtectedRoute>
+          } />
+          <Route path="landlord-dashboard" element={
+            <ProtectedRoute>
+              <LazyLandlordDashboard/>
             </ProtectedRoute>
           } />
           <Route path="about" element={<LazyBriefAbout/>} />
