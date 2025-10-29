@@ -61,8 +61,15 @@ function Dashboard() {
   useEffect(() => {
     const currentUser = authService.getCurrentUser();
     setUser(currentUser);
+    
+    // Redirect landlords to their dedicated dashboard
+    if (currentUser?.user_type === 'landlord') {
+      navigate('/landlord-dashboard');
+      return;
+    }
+    
     fetchDashboardData();
-  }, []);
+  }, [navigate]);
 
   const fetchDashboardData = async () => {
     try {
