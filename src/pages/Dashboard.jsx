@@ -7,6 +7,7 @@ import '../App.css';
 
 function Dashboard() {
   const [activeTab, setActiveTab] = useState('overview');
+  const [landlordIssues, setLandlordIssues] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [properties, setProperties] = useState([]);
@@ -69,14 +70,16 @@ function Dashboard() {
 
       if (user?.user_type === 'landlord') {
         // Fetch landlord data
-        const [propertiesRes, paymentsRes, notificationsRes] = await Promise.all([
+        const [propertiesRes, paymentsRes, notificationsRes, issuesRes] = await Promise.all([
           api.get('/properties/landlord'),
           api.get('/payments/landlord'),
-          api.get('/notifications/landlord')
+          api.get('/notifications/landlord'),
+          api.get('/issues/landlord')
         ]);
         setProperties(propertiesRes.data.properties || []);
         setPayments(paymentsRes.data.payments || []);
         setNotifications(notificationsRes.data.notifications || []);
+        setLandlordIssues(issuesRes.data.data || []);
       } else {
         // Fetch tenant data
         const [bookingsRes, paymentsRes, issuesRes, notificationsRes] = await Promise.all([
@@ -112,6 +115,10 @@ function Dashboard() {
       setNotifications([
         { id: 1, message: 'New booking request for Modern Apartment', type: 'booking', date: '2024-01-15' },
         { id: 2, message: 'Payment received from John Doe', type: 'payment', date: '2024-01-14' }
+      ]);
+      setLandlordIssues([
+        { id: 1, title: 'Leaky faucet in unit 2A', description: 'Tenant reported leaky faucet', status: 'PENDING', priority: 'MEDIUM', tenant: 'John Doe', property: 'Modern Apartment', created_at: '2024-01-12' },
+        { id: 2, title: 'Broken light fixture', description: 'Living room light not working', status: 'IN_PROGRESS', priority: 'HIGH', tenant: 'Jane Smith', property: 'Studio Unit', created_at: '2024-01-10' }
       ]);
     } else {
       setBookings([{ id: 1, property_name: 'Modern Apartment', status: 'confirmed', move_in_date: '2024-02-01' }]);
@@ -355,65 +362,142 @@ function Dashboard() {
 
   const renderLandlordView = () => (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Landlord Dashboard</h2>
+      {activeTab === 'overview' && (
+        <>
+          <h2 className="text-2xl font-bold">Landlord Dashboard</h2>
 
-      {/* Properties Overview */}
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h3 className="text-xl font-semibold mb-4">My Properties</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left p-2">Property</th>
-                <th className="text-left p-2">Location</th>
-                <th className="text-left p-2">Status</th>
-                <th className="text-left p-2">Rent</th>
-              </tr>
-            </thead>
-            <tbody>
-              {properties.map(property => (
-                <tr key={property.id} className="border-b">
-                  <td className="p-2">{property.name}</td>
-                  <td className="p-2">{property.location}</td>
-                  <td className="p-2">
+          {/* Properties Overview */}
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h3 className="text-xl font-semibold mb-4">My Properties</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left p-2">Property</th>
+                    <th className="text-left p-2">Location</th>
+                    <th className="text-left p-2">Status</th>
+                    <th className="text-left p-2">Rent</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {properties.map(property => (
+                    <tr key={property.id} className="border-b">
+                      <td className="p-2">{property.name}</td>
+                      <td className="p-2">{property.location}</td>
+                      <td className="p-2">
+                        <span className={`px-2 py-1 rounded text-sm ${
+                          property.status === 'occupied' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {property.status}
+                        </span>
+                      </td>
+                      <td className="p-2">KES {property.rent_amount?.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Payment Tracking */}
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h3 className="text-xl font-semibold mb-4">Payment Tracking</h3>
+            <div className="space-y-3">
+              {payments.map(payment => (
+                <div key={payment.id} className="flex justify-between items-center p-3 border rounded">
+                  <div>
+                    <p className="font-medium">{payment.tenant}</p>
+                    <p className="text-sm text-gray-600">{payment.date}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">KES {payment.amount?.toLocaleString()}</p>
                     <span className={`px-2 py-1 rounded text-sm ${
-                      property.status === 'occupied' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      payment.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                     }`}>
-                      {property.status}
+                      {payment.status}
                     </span>
-                  </td>
-                  <td className="p-2">KES {property.rent_amount?.toLocaleString()}</td>
-                </tr>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            </div>
+          </div>
+        </>
+      )}
 
-      {/* Payment Tracking */}
+      {activeTab === 'issues' && renderIssuesManagement()}
+    </div>
+  );
+
+  const renderIssuesManagement = () => (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Issue Management</h2>
+
+      {/* Issues List */}
       <div className="bg-white p-6 rounded-lg shadow-md">
-        <h3 className="text-xl font-semibold mb-4">Payment Tracking</h3>
-        <div className="space-y-3">
-          {payments.map(payment => (
-            <div key={payment.id} className="flex justify-between items-center p-3 border rounded">
-              <div>
-                <p className="font-medium">{payment.tenant}</p>
-                <p className="text-sm text-gray-600">{payment.date}</p>
+        <h3 className="text-xl font-semibold mb-4">Tenant Issues</h3>
+        <div className="space-y-4">
+          {landlordIssues.map(issue => (
+            <div key={issue.id} className="border rounded-lg p-4">
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex-1">
+                  <h4 className="font-semibold text-lg">{issue.title}</h4>
+                  <p className="text-gray-600 mb-2">{issue.description}</p>
+                  <div className="flex items-center gap-4 text-sm text-gray-500">
+                    <span>Tenant: {issue.tenant}</span>
+                    <span>Property: {issue.property}</span>
+                    <span>Priority: <span className={`px-2 py-1 rounded text-xs ${
+                      issue.priority === 'HIGH' ? 'bg-red-100 text-red-800' :
+                      issue.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-green-100 text-green-800'
+                    }`}>{issue.priority}</span></span>
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  <select
+                    value={issue.status}
+                    onChange={(e) => updateIssueStatus(issue.id, e.target.value)}
+                    className="px-3 py-1 border border-gray-300 rounded text-sm"
+                  >
+                    <option value="PENDING">Pending</option>
+                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="RESOLVED">Resolved</option>
+                  </select>
+                  <span className={`px-2 py-1 rounded text-xs ${
+                    issue.status === 'RESOLVED' ? 'bg-green-100 text-green-800' :
+                    issue.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800' :
+                    'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {issue.status.replace('_', ' ')}
+                  </span>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="font-medium">KES {payment.amount?.toLocaleString()}</p>
-                <span className={`px-2 py-1 rounded text-sm ${
-                  payment.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {payment.status}
-                </span>
+              <div className="text-sm text-gray-500">
+                Reported: {new Date(issue.created_at).toLocaleDateString()}
               </div>
             </div>
           ))}
+          {landlordIssues.length === 0 && (
+            <p className="text-gray-500 text-center py-8">No issues reported</p>
+          )}
         </div>
       </div>
     </div>
   );
+
+  const updateIssueStatus = async (issueId, newStatus) => {
+    try {
+      await api.patch(`/issues/${issueId}/status`, { status: newStatus });
+      setLandlordIssues(prev =>
+        prev.map(issue =>
+          issue.id === issueId ? { ...issue, status: newStatus } : issue
+        )
+      );
+      alert('Issue status updated successfully!');
+    } catch (error) {
+      console.error('Error updating issue status:', error);
+      alert('Failed to update issue status. Please try again.');
+    }
+  };
 
   const renderComparison = () => (
     <div>
@@ -511,6 +595,13 @@ function Dashboard() {
               Saved Properties
             </button>
             <button
+              onClick={() => { setActiveTab('issues'); setSidebarOpen(false); }}
+              className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${activeTab === 'issues' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'}`}
+            >
+              <FaExclamationTriangle className="inline mr-3" />
+              Issues
+            </button>
+            <button
               onClick={() => { setActiveTab('comparison'); setSidebarOpen(false); }}
               className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${activeTab === 'comparison' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'}`}
             >
@@ -560,6 +651,7 @@ function Dashboard() {
               <h1 className="text-2xl font-bold text-gray-800">
                 {activeTab === 'overview' && 'Dashboard Overview'}
                 {activeTab === 'favorites' && 'Saved Properties'}
+                {activeTab === 'issues' && 'Issue Management'}
                 {activeTab === 'comparison' && 'Property Comparison'}
               </h1>
             </div>
