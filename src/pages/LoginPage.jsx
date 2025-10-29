@@ -96,15 +96,7 @@ function LoginPage() {
               {loading ? 'Logging in...' : 'Login'}
             </button>
 
-            {/* Demo credentials info */}
-            <div className="mt-4 p-3 bg-gray-100 rounded-md text-sm text-gray-700">
-              <p className="font-semibold mb-1">Demo Credentials:</p>
-              <p>Email: demo@mtaahaven.com</p>
-              <p>Password: demo123</p>
-              <p className="mt-2 text-xs text-gray-600">
-                <strong>Note:</strong> Backend must be running for authentication to work.
-              </p>
-            </div>
+            
 
             <p>or login with social platforms</p>
             <div className="social-icons">
