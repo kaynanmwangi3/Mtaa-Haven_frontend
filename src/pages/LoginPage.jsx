@@ -44,9 +44,9 @@ function LoginPage() {
       // Redirect based on user role
       const user = authService.getCurrentUser();
       if (user?.user_type === 'landlord') {
-        navigate('/dashboard');
+        navigate('/landlord-dashboard');
       } else {
-        navigate('/properties');
+        navigate('/dashboard');
       }
     } catch (error) {
       console.error(error);

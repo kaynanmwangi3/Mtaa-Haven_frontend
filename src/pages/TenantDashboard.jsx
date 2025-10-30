@@ -116,7 +116,7 @@ function TenantDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 flex">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
@@ -175,7 +175,7 @@ function TenantDashboard() {
       </div>
 
       {/* Main content */}
-      <div className="lg:ml-64">
+      <div className="lg:ml-10 w-350">
         {/* Header */}
         <header className="bg-white shadow-sm border-b">
           <div className="flex items-center justify-between px-6 py-4">

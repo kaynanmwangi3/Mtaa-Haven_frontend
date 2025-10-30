@@ -63,7 +63,7 @@ function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white px-8 py-12">
+    <div className="min-h-screen bg-gray-100 text-white px-8 py-12">
       <div className="max-w-4xl mx-auto">
         <div className="bg-gray-900 rounded-lg p-8 shadow-lg">
           <div className="flex justify-between items-center mb-8">
