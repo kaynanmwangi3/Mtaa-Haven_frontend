@@ -10,7 +10,6 @@ function Properties(){
      const [properties, setProperties] = useState([])
      const [filteredProperties, setFilteredProperties] = useState([])
      const [selectedProperty, setSelectedProperty] = useState(null);
-     const [favorites, setFavorites] = useState(new Set());
      const [sortBy, setSortBy] = useState('name');
      const [sortOrder, setSortOrder] = useState('asc');
      const [currentFilters, setCurrentFilters] = useState({});
@@ -50,17 +49,6 @@ function Properties(){
          setSelectedProperty(property);
      };
 
-     const handleFavorite = (propertyId, isFavorited) => {
-         setFavorites(prev => {
-             const newFavorites = new Set(prev);[]
-             if (isFavorited) {
-                 newFavorites.add(propertyId);
-             } else {
-                 newFavorites.delete(propertyId);
-             }
-             return newFavorites;
-         });
-     };
 
      const handleCloseModal = () => {
          setSelectedProperty(null);
@@ -112,15 +100,6 @@ function Properties(){
          if (currentFilters.type) {
              filtered = filtered.filter(property => property.type === currentFilters.type);
          }
-
-        //  // Apply amenities filter
-        //  if (currentFilters.amenities && currentFilters.amenities.length > 0) {
-        //      filtered = filtered.filter(property =>
-        //          currentFilters.amenities.every(amenity =>
-        //              property.amenities?.includes(amenity)
-        //          )
-        //      );
-        //  }
 
          // Apply sorting
          filtered.sort((a, b) => {
@@ -219,16 +198,6 @@ function Properties(){
                      className="w-full h-150 object-cover opacity-80 group-hover:opacity-100 transition-opacity"
                    />
 
-                   {/* Favorite button */}
-                   <button
-                     onClick={() => handleFavorite(property.id, !favorites.has(property.id))}
-                     className={`absolute top-4 right-4 p-2 rounded-full transition-all ${
-                       favorites.has(property.id) ? 'text-red-500 bg-white' : 'text-white bg-black bg-opacity-50'
-                     }`}
-                   >
-                     <FaHeart className={`text-xl ${favorites.has(property.id) ? 'fill-current' : ''}`} />
-                   </button>
-
                    {/* Overlay gradient */}
                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
 
@@ -269,7 +238,6 @@ function Properties(){
                property={selectedProperty}
                isOpen={!!selectedProperty}
                onClose={handleCloseModal}
-               onFavorite={handleFavorite}
              />
          </div>
      )

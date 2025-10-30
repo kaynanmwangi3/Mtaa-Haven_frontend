@@ -5,13 +5,15 @@ import { auto } from '@cloudinary/url-gen/actions/resize';
 import { autoGravity } from '@cloudinary/url-gen/qualifiers/gravity';
 import { AdvancedImage } from '@cloudinary/react';
 import api from '../services/auth';
+import { authService } from '../services/auth';
 
-const PropertyModal = ({ property, isOpen, onClose, onFavorite }) => {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isFavorited, setIsFavorited] = useState(false);
+
+const PropertyModal = ({ property, isOpen, onClose}) => {
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [bookingData, setBookingData] = useState({
+    tenant_id: '',
+    property_id: '',
     move_in_date: '',
     lease_duration: '12',
     special_requests: ''
@@ -27,26 +29,41 @@ const PropertyModal = ({ property, isOpen, onClose, onFavorite }) => {
 
   const cld = new Cloudinary({ cloud: { cloudName: 'djtahjahe' } });
 
-  const handleFavorite = () => {
-    setIsFavorited(!isFavorited);
-    onFavorite && onFavorite(property.id, !isFavorited);
-  };
-
   const handleBooking = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
+    const user = authService.getCurrentUser(); 
+    const tenantId = user?.id; 
+    if (!tenantId) {
+      alert('You must be logged in as a tenant to make a booking.');
+      return;
+    }
+    const moveInDate = new Date(bookingData.move_in_date);
+    const endDate = new Date(moveInDate);
+    endDate.setMonth(endDate.getMonth() + parseInt(bookingData.lease_duration));
+
+
       const bookingPayload = {
+        tenant_id: tenantId,
         property_id: property.id,
-        ...bookingData
+        start_date: bookingData.move_in_date,
+        end_date: endDate.toISOString(),
+        special_requests: bookingData.special_requests || ''
       };
-      await api.post('/bookings', bookingPayload);
+
+      console.log('Booking payload has loaded and is:', bookingPayload);
+
+      const response = await api.post('/bookings', bookingPayload);
+      console.log('Booking response:', response.data);
       alert('Booking request submitted successfully!');
       setShowBookingForm(false);
       setShowPaymentForm(true);
     } catch (error) {
       console.error('Booking error:', error);
-      alert('Failed to submit booking. Please try again.');
+      console.error('Error response:', error.response?.data);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to submit booking';
+      alert(`Booking failed: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -73,7 +90,6 @@ const PropertyModal = ({ property, isOpen, onClose, onFavorite }) => {
     }
   };
 
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="property-modal-title">
       <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden" role="document">
@@ -81,14 +97,6 @@ const PropertyModal = ({ property, isOpen, onClose, onFavorite }) => {
         <div className="flex justify-between items-center p-6 border-b">
           <h2 id="property-modal-title" className="text-2xl font-bold text-gray-800">{property.title}</h2>
           <div className="flex items-center gap-4">
-            <button
-              onClick={handleFavorite}
-              className={`p-2 rounded-full transition-colors ${
-                isFavorited ? 'text-red-500 bg-red-50' : 'text-gray-400 hover:text-red-500'
-              }`}
-            >
-              <FaHeart className={`text-xl ${isFavorited ? 'fill-current' : ''}`} />
-            </button>
             <button
               onClick={onClose}
               className="p-2 rounded-full text-gray-400 hover:text-gray-600 transition-colors"
@@ -151,8 +159,6 @@ const PropertyModal = ({ property, isOpen, onClose, onFavorite }) => {
                   'This beautiful property offers modern amenities and comfortable living spaces. Perfect for individuals or families looking for a quality rental in a prime location.'}
               </p>
             </div>
-
-            
 
             {/* Contact Form */}
             <div className="border-t pt-6">
