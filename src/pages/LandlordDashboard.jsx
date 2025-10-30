@@ -3,6 +3,7 @@ import { FaHome, FaUsers, FaExclamationTriangle, FaCreditCard, FaBars, FaTimes, 
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth';
 import api from '../services/auth';
+import '../App.css';
 
 function LandlordDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -100,7 +101,7 @@ function LandlordDashboard() {
   const totalRevenue = properties.reduce((sum, p) => sum + p.rent_amount, 0);
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen flex bg-gray-100">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
@@ -110,7 +111,7 @@ function LandlordDashboard() {
       )}
 
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
+      <div className={`fixed flex-col pb-20  inset-y-0 left-0 z-50 w-64  bg-white shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
         <div className="flex items-center justify-between p-4 border-b">
           <h1 className="text-xl font-bold text-gray-800">Mtaa Haven</h1>
           <button
@@ -142,9 +143,9 @@ function LandlordDashboard() {
       </div>
 
       {/* Main content */}
-      <div className="lg:ml-64">
+      <div className="lg:ml-10 ">
         {/* Header */}
-        <header className="bg-white shadow-sm border-b">
+        <header className="bg-white shadow-sm border-b w-340">
           <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center">
               <button

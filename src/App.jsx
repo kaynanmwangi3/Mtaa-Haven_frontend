@@ -23,6 +23,8 @@ const LazyLandlordDashboard = React.lazy(() => import('./pages/LandlordDashboard
 const LazyProfile = React.lazy(() => import('./pages/Profile'));
 const LazyBriefAbout = React.lazy(() => import('./pages/BriefAbout'));
 const LazyLoginPage = React.lazy(() => import('./pages/LoginPage'));
+import RoleProtectedRoute from './components/RoleProtectedRoute.jsx';
+
 
 const App = () => {
 
@@ -41,14 +43,14 @@ const App = () => {
             </ProtectedRoute>
           } />
           <Route path="dashboard" element={
-            <ProtectedRoute>
+            <RoleProtectedRoute allowedRoles={['tenant','student']}>
               <LazyTenantDashboard/>
-            </ProtectedRoute>
+            </RoleProtectedRoute>
           } />
           <Route path="landlord-dashboard" element={
-            <ProtectedRoute>
+            <RoleProtectedRoute allowedRoles={['landlord']}>
               <LazyLandlordDashboard/>
-            </ProtectedRoute>
+            </RoleProtectedRoute>
           } />
           <Route path="about" element={<LazyBriefAbout/>} />
           <Route path="profile" element={
