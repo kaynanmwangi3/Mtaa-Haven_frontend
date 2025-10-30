@@ -33,8 +33,12 @@ function Properties(){
              if (filters.price_max) queryParams.append('price_max', filters.price_max);
              if (filters.type) queryParams.append('type', filters.type);
 
+<<<<<<< Updated upstream
              const url = `/properties${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
              console.log("Request URL:", url);
+=======
+             const url = ` http://127.0.0.1:5000/api/properties${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+>>>>>>> Stashed changes
              const response = await api.get(url);
               console.log("Response:", response.data.properties);
              const propertiesData = response.data.properties;
@@ -52,7 +56,7 @@ function Properties(){
 
      const handleFavorite = (propertyId, isFavorited) => {
          setFavorites(prev => {
-             const newFavorites = new Set(prev);
+             const newFavorites = new Set(prev);[]
              if (isFavorited) {
                  newFavorites.add(propertyId);
              } else {

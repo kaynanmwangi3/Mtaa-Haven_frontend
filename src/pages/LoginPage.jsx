@@ -3,6 +3,10 @@ import { useState, useEffect } from "react";
 import "./LoginPage.css";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../services/auth";
+<<<<<<< Updated upstream
+=======
+// import googleAuth from "../services/googleAuth";
+>>>>>>> Stashed changes
 
 function LoginPage() {
   const [isActive, setIsActive] = useState(false);
@@ -16,6 +20,12 @@ function LoginPage() {
     if (authService.isAuthenticated()) {
       navigate("/");
     }
+<<<<<<< Updated upstream
+=======
+
+    // // Initialize Google Auth
+    // googleAuth.initialize().catch(console.error);
+>>>>>>> Stashed changes
   }, [navigate]);
 
   const handleRegister = async (e) => {
