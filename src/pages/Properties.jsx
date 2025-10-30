@@ -16,11 +16,11 @@ function Properties(){
      const [currentFilters, setCurrentFilters] = useState({});
 
      useEffect(()=>{
-         fetchProperties();
+        fetchProperties();
      },[])
 
      useEffect(() => {
-         applyFiltersAndSort();
+        applyFiltersAndSort();
      }, [properties, currentFilters, sortBy, sortOrder]);
 
      const fetchProperties = async (filters = {}) => {
@@ -28,13 +28,17 @@ function Properties(){
             console.log("Fetching properties...");
              const queryParams = new URLSearchParams();
 
-             if (filters.location) queryParams.append('location', filters.location);
+             if (filters.city) queryParams.append('city', filters.city);
              if (filters.price_min) queryParams.append('price_min', filters.price_min);
              if (filters.price_max) queryParams.append('price_max', filters.price_max);
              if (filters.type) queryParams.append('type', filters.type);
 
+<<<<<<< Updated upstream
              const url = `/properties${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
              console.log("Request URL:", url);
+=======
+             const url = ` http://127.0.0.1:5000/api/properties${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+>>>>>>> Stashed changes
              const response = await api.get(url);
               console.log("Response:", response.data.properties);
              const propertiesData = response.data.properties;
@@ -52,7 +56,7 @@ function Properties(){
 
      const handleFavorite = (propertyId, isFavorited) => {
          setFavorites(prev => {
-             const newFavorites = new Set(prev);
+             const newFavorites = new Set(prev);[]
              if (isFavorited) {
                  newFavorites.add(propertyId);
              } else {
@@ -67,23 +71,25 @@ function Properties(){
      };
 
      const handleSearch = (query, filters) => {
-         setCurrentFilters({ ...filters, searchQuery: query });
+        setCurrentFilters({ ...filters, searchQuery: query });
      };
 
      const handleFilterChange = (filters) => {
-         setCurrentFilters(filters);
+        setCurrentFilters(filters);
      };
 
      const applyFiltersAndSort = () => {
          let filtered = [...properties];
+         console.log("shoing ",filtered);
 
          // Apply search query
          if (currentFilters.searchQuery) {
              const query = currentFilters.searchQuery.toLowerCase();
              filtered = filtered.filter(property =>
                  property.title.toLowerCase().includes(query) ||
-                 property.location.toLowerCase().includes(query) ||
+                 property.city.toLowerCase().includes(query) ||
                  property.description?.toLowerCase().includes(query) ||
+                 property.type.toLowerCase().includes(query) ||
                  property.amenities?.some(amenity => amenity.toLowerCase().includes(query))
              );
          }
@@ -102,23 +108,23 @@ function Properties(){
          }
 
          // Apply location filter
-         if (currentFilters.location) {
-             filtered = filtered.filter(property => property.location === currentFilters.location);
+         if (currentFilters.city) {
+             filtered = filtered.filter(property => property.city === currentFilters.city);
          }
 
          // Apply property type filter
-         if (currentFilters.propertyType) {
-             filtered = filtered.filter(property => property.type === currentFilters.propertyType);
+         if (currentFilters.type) {
+             filtered = filtered.filter(property => property.type === currentFilters.type);
          }
 
-         // Apply amenities filter
-         if (currentFilters.amenities && currentFilters.amenities.length > 0) {
-             filtered = filtered.filter(property =>
-                 currentFilters.amenities.every(amenity =>
-                     property.amenities?.includes(amenity)
-                 )
-             );
-         }
+        //  // Apply amenities filter
+        //  if (currentFilters.amenities && currentFilters.amenities.length > 0) {
+        //      filtered = filtered.filter(property =>
+        //          currentFilters.amenities.every(amenity =>
+        //              property.amenities?.includes(amenity)
+        //          )
+        //      );
+        //  }
 
          // Apply sorting
          filtered.sort((a, b) => {
@@ -212,8 +218,8 @@ function Properties(){
                  >
                    {/* Property Image */}
                    <img
-                     src={property.image || "https://media.istockphoto.com/id/2204430566/photo/atlanta-georgia-house-usa.jpg?s=612x612&w=0&k=20&c=wQjugaIwMWyAu3YbT-85bGa6-G9mkNIv8aKRieMcgJc="}
-                     alt={property.name}
+                     src={property.url || "https://media.istockphoto.com/id/2204430566/photo/atlanta-georgia-house-usa.jpg?s=612x612&w=0&k=20&c=wQjugaIwMWyAu3YbT-85bGa6-G9mkNIv8aKRieMcgJc="}
+                     alt={property.title}
                      className="w-full h-150 object-cover opacity-80 group-hover:opacity-100 transition-opacity"
                    />
 
@@ -233,7 +239,7 @@ function Properties(){
                    {/* Text content */}
                    <div className="absolute bottom-0 left-0 w-full p-6 text-white">
                      <h3 className="text-xl font-semibold mb-2 uppercase tracking-wide">
-                       {property.name}
+                       {property.title}
                      </h3>
                      <p className="text-lg font-light mb-4">
                        KES {property.rent_amount?.toLocaleString() || 'N/A'} / MONTH

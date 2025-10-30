@@ -4,6 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth';
 import api from '../services/auth';
 import '../App.css';
+import { FaUser } from 'react-icons/fa';
+import { Link } from 'react-router-dom';  
+import AddPropertyForm from '../components/AddPropertyForm.jsx';
 
 function LandlordDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -12,6 +15,7 @@ function LandlordDashboard() {
   const [bookings, setBookings] = useState([]);
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -130,6 +134,36 @@ function LandlordDashboard() {
             </div>
           </div>
         </nav>
+
+        <div>
+          <Link
+            to="/profile"
+            className="w-full text-left px-4 py-3 rounded-lg transition-colors text-gray-700 hover:bg-gray-100 block"
+          >
+            <FaUser className="inline mr-3" />
+            Profile Settings
+        </Link>
+        </div>
+
+        <div>
+          <button
+          
+            onClick={() => setShowForm(!showForm)}
+            className="w-full text-left px-4 py-3 rounded-lg transition-colors text-gray-700 hover:bg-gray-100 block"
+          >
+            {showForm ? 'Close Form' : 'Add New Property'}
+          </button>
+          {showForm && (
+        <div className="mt-6">
+          <AddPropertyForm
+            onSuccess={(data) => {
+              console.log("New property created:", data);
+              setShowForm(false);
+            }}
+          />
+        </div>
+      )}
+        </div>
 
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t">
           <button
