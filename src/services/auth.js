@@ -1,15 +1,7 @@
-<<<<<<< Updated upstream
-import axios from 'axios';
-
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL ||
-  "https://mtaa-haven-backend-pr-23.onrender.com";
-=======
 import axios from "axios";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://127.0.0.1:5000/api";
->>>>>>> Stashed changes
 
 // Create axios instance with base configuration
 const api = axios.create({
@@ -49,7 +41,6 @@ export const authService = {
   // Login user
   async login(credentials) {
     try {
-<<<<<<< Updated upstream
       const response = await api.post('/login', credentials);
       console.log('Login response:', response.data);
       const { token, user } = response.data;
@@ -58,25 +49,9 @@ export const authService = {
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
         console.log('Token saved:', token); 
-=======
-      const response = await api.post("/login", credentials);
-      const { token, user } = response.data;
-
-      if (token) {
-        localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify(user));
->>>>>>> Stashed changes
       }
       return response.data;
     } catch (error) {
-<<<<<<< Updated upstream
-=======
-      // If backend is not available, provide demo login
-      if (error.code === "ERR_NETWORK" || error.message === "Network Error") {
-        console.warn("Backend not available, using demo mode");
-        return this.demoLogin(credentials);
-      }
->>>>>>> Stashed changes
       throw error.response?.data || error;
     }
   },
@@ -86,21 +61,9 @@ export const authService = {
       const response = await api.post("/register", userData);
       return response.data;
     } catch (error) {
-<<<<<<< Updated upstream
       throw error.response?.data || error;
     }
   },
-=======
-      // If backend is not available, provide demo registration
-      if (error.code === "ERR_NETWORK" || error.message === "Network Error") {
-        console.warn("Backend not available, using demo mode");
-        return this.demoRegister(userData);
-      }
-      throw error.response?.data || error;
-    }
-  },
-
->>>>>>> Stashed changes
   // Logout user
   async logout() {
     try {
@@ -128,10 +91,6 @@ export const authService = {
   getToken() {
     return localStorage.getItem("token");
   },
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 };
 
 export default api;
