@@ -40,9 +40,9 @@ function TenantDashboard() {
       setError(null);
 
       const [bookingsRes, paymentsRes, issuesRes, notificationsRes] = await Promise.all([
-        api.get('/bookings/tenant'),
+        api.get('/bookings'),
         api.get('/payments/tenant'),
-        api.get('/issues/tenant'),
+        api.get('/issues/'),
         api.get('/notifications/tenant')
       ]);
 
@@ -55,26 +55,9 @@ function TenantDashboard() {
       console.error('Error fetching dashboard data:', error);
       setError('Failed to load dashboard data. Please try again.');
       // Load demo data as fallback
-      loadDemoData();
     } finally {
       setLoading(false);
     }
-  };
-
-  const loadDemoData = () => {
-    setBookings([{ id: 1, property_name: 'Modern Apartment', status: 'confirmed', move_in_date: '2024-02-01' }]);
-    setPayments([
-      { id: 1, amount: 25000, status: 'paid', date: '2024-01-15', property: 'Modern Apartment' },
-      { id: 2, amount: 25000, status: 'paid', date: '2023-12-15', property: 'Modern Apartment' }
-    ]);
-    setIssues([
-      { id: 1, title: 'Leaky faucet', description: 'Kitchen faucet is leaking', status: 'resolved', date: '2024-01-10', priority: 'low' },
-      { id: 2, title: 'Broken light', description: 'Living room light not working', status: 'pending', date: '2024-01-12', priority: 'medium' }
-    ]);
-    setNotifications([
-      { id: 1, message: 'Your booking for Modern Apartment has been confirmed', type: 'booking', date: '2024-01-15' },
-      { id: 2, message: 'Maintenance request update', type: 'issue', date: '2024-01-14' }
-    ]);
   };
 
   const handleLogout = async () => {
@@ -175,7 +158,7 @@ function TenantDashboard() {
       </div>
 
       {/* Main content */}
-      <div className="lg:ml-10 w-350">
+      <div className="lg:ml-10 w-full">
         {/* Header */}
         <header className="bg-white shadow-sm border-b">
           <div className="flex items-center justify-between px-6 py-4">

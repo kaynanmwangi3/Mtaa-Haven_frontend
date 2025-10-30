@@ -40,6 +40,7 @@ function LoginPage() {
     try {
       const response = await authService.login(loginData);
       alert("Login successful!");
+      
 
       // Redirect based on user role
       const user = authService.getCurrentUser();
