@@ -27,14 +27,6 @@ const PropertyModal = ({ property, isOpen, onClose, onFavorite }) => {
 
   const cld = new Cloudinary({ cloud: { cloudName: 'djtahjahe' } });
 
-  // Mock property images - in real app, these would come from the property data
-  const propertyImages = [
-    property.image || 'https://media.istockphoto.com/id/2155879397/photo/house-in-a-charming-neighborhood-with-stunning-sidewalk-landscaping.jpg',
-    'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800',
-    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800',
-    'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=800'
-  ];
-
   const handleFavorite = () => {
     setIsFavorited(!isFavorited);
     onFavorite && onFavorite(property.id, !isFavorited);
@@ -48,7 +40,6 @@ const PropertyModal = ({ property, isOpen, onClose, onFavorite }) => {
         property_id: property.id,
         ...bookingData
       };
-
       await api.post('/bookings', bookingPayload);
       alert('Booking request submitted successfully!');
       setShowBookingForm(false);
@@ -70,7 +61,6 @@ const PropertyModal = ({ property, isOpen, onClose, onFavorite }) => {
         amount: property.rent_amount,
         ...paymentData
       };
-
       await api.post('/payments', paymentPayload);
       alert('Payment processed successfully!');
       setShowPaymentForm(false);
@@ -83,20 +73,13 @@ const PropertyModal = ({ property, isOpen, onClose, onFavorite }) => {
     }
   };
 
-  const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % propertyImages.length);
-  };
-
-  const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + propertyImages.length) % propertyImages.length);
-  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="property-modal-title">
       <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden" role="document">
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b">
-          <h2 id="property-modal-title" className="text-2xl font-bold text-gray-800">{property.name}</h2>
+          <h2 id="property-modal-title" className="text-2xl font-bold text-gray-800">{property.title}</h2>
           <div className="flex items-center gap-4">
             <button
               onClick={handleFavorite}
@@ -121,63 +104,13 @@ const PropertyModal = ({ property, isOpen, onClose, onFavorite }) => {
           <div className="lg:w-1/2 relative">
             <div className="relative h-64 lg:h-full">
               <img
-                src={propertyImages[currentImageIndex]}
-                alt={`${property.name} - Image ${currentImageIndex + 1}`}
+                src={property.url}
+                alt={property.title}
                 className="w-full h-full object-cover"
               />
-
-              {/* Navigation arrows */}
-              {propertyImages.length > 1 && (
-                <>
-                  <button
-                    onClick={prevImage}
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-all"
-                  >
-                    ‹
-                  </button>
-                  <button
-                    onClick={nextImage}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-all"
-                  >
-                    ›
-                  </button>
-                </>
-              )}
-
-              {/* Image indicators */}
-              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
-                {propertyImages.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentImageIndex(index)}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      index === currentImageIndex ? 'bg-white' : 'bg-white bg-opacity-50'
-                    }`}
-                  />
-                ))}
-              </div>
             </div>
 
-            {/* Thumbnail strip */}
-            {propertyImages.length > 1 && (
-              <div className="flex gap-2 p-4 bg-gray-50">
-                {propertyImages.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentImageIndex(index)}
-                    className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
-                      index === currentImageIndex ? 'border-blue-500' : 'border-gray-300'
-                    }`}
-                  >
-                    <img
-                      src={image}
-                      alt={`Thumbnail ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
+            
           </div>
 
           {/* Property Details */}
@@ -202,11 +135,11 @@ const PropertyModal = ({ property, isOpen, onClose, onFavorite }) => {
               </div>
               <div className="flex items-center gap-2">
                 <FaRulerCombined className="text-gray-600" />
-                <span>{property.size || 'N/A'} sq ft</span>
+                <span>{property.area_sqft || 'N/A'} sq ft</span>
               </div>
               <div className="flex items-center gap-2">
                 <FaMapMarkerAlt className="text-gray-600" />
-                <span>{property.location || 'Location not specified'}</span>
+                <span>{ property.address || 'Location not specified'},{property.city || 'Location not specified'}</span>
               </div>
             </div>
 
@@ -219,20 +152,7 @@ const PropertyModal = ({ property, isOpen, onClose, onFavorite }) => {
               </p>
             </div>
 
-            {/* Amenities */}
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-2">Amenities</h3>
-              <div className="flex flex-wrap gap-2">
-                {(property.amenities || ['Parking', 'Security', 'Water', 'Electricity']).map((amenity, index) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
-                  >
-                    {amenity}
-                  </span>
-                ))}
-              </div>
-            </div>
+            
 
             {/* Contact Form */}
             <div className="border-t pt-6">

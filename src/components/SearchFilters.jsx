@@ -1,33 +1,20 @@
-import { useState } from 'react';
-import { FaSearch, FaFilter, FaTimes } from 'react-icons/fa';
+import { useState } from "react";
+import { FaSearch, FaFilter, FaTimes } from "react-icons/fa";
 
 const SearchFilters = ({ onSearch, onFilterChange }) => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState({
-    minPrice: '',
-    maxPrice: '',
-    bedrooms: '',
-    location: '',
-    propertyType: '',
-    amenities: []
+    minPrice: "",
+    maxPrice: "",
+    bedrooms: "",
+    city: "",
+    type: "",
   });
   const [showFilters, setShowFilters] = useState(false);
 
-  const locations = [
-    'Westlands, Nairobi',
-    'Kilimani, Nairobi',
-    'Karen, Nairobi',
-    'Parklands, Nairobi',
-    'Koinange Street, Nairobi',
-    'River Road, Nairobi'
-  ];
+  const cities = ["Nairobi","Mombasa","Kisumu","Nakuru","Eldoret","Thika","Malindi","Machakos","Naivasha"];
 
-  const propertyTypes = ['Apartment', 'House', 'Studio', 'Townhouse', 'Villa'];
-
-  const amenitiesList = [
-    'Parking', 'Security', 'Gym', 'Swimming Pool', 'Water', 'Electricity',
-    'WiFi', 'Garden', 'Balcony', 'Air Conditioning', 'Furnished'
-  ];
+  const types = ["Apartment", "House", "Studio", "Townhouse", "Villa", "Bungalow"];
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -40,38 +27,37 @@ const SearchFilters = ({ onSearch, onFilterChange }) => {
     onFilterChange(newFilters);
   };
 
-  const handleAmenityToggle = (amenity) => {
-    const newAmenities = filters.amenities.includes(amenity)
-      ? filters.amenities.filter(a => a !== amenity)
-      : [...filters.amenities, amenity];
-    handleFilterChange('amenities', newAmenities);
-  };
-
   const clearFilters = () => {
     const clearedFilters = {
-      minPrice: '',
-      maxPrice: '',
-      bedrooms: '',
-      location: '',
-      propertyType: '',
-      amenities: []
+      minPrice: "",
+      maxPrice: "",
+      bedrooms: "",
+      city: "",
+      type: "",
+      amenities: [],
     };
     setFilters(clearedFilters);
     onFilterChange(clearedFilters);
   };
 
   const hasActiveFilters = () => {
-    return Object.values(filters).some(value =>
-      Array.isArray(value) ? value.length > 0 : value !== ''
+    return Object.values(filters).some((value) =>
+      Array.isArray(value) ? value.length > 0 : value !== ""
     );
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-6" role="search" aria-label="Property search and filters">
+    <div
+      className="bg-white rounded-lg shadow-md p-6 mb-6"
+      role="search"
+      aria-label="Property search and filters"
+    >
       {/* Search Bar */}
       <form onSubmit={handleSearch} className="flex gap-4 mb-4">
         <div className="flex-1 relative">
-          <label htmlFor="property-search" className="sr-only">Search properties</label>
+          <label htmlFor="property-search" className="sr-only">
+            Search properties
+          </label>
           <input
             id="property-search"
             type="text"
@@ -81,22 +67,31 @@ const SearchFilters = ({ onSearch, onFilterChange }) => {
             className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             aria-describedby="search-help"
           />
-          <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" aria-hidden="true" />
-          <span id="search-help" className="sr-only">Search by property name, location, or amenities</span>
+          <FaSearch
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+            aria-hidden="true"
+          />
+          <span id="search-help" className="sr-only">
+            Search by property name, location, or amenities
+          </span>
         </div>
         <button
           type="button"
           onClick={() => setShowFilters(!showFilters)}
           className={`px-4 py-3 border rounded-lg transition-colors flex items-center gap-2 ${
-            showFilters ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+            showFilters
+              ? "bg-blue-600 text-white border-blue-600"
+              : "border-gray-300 text-gray-700 hover:bg-gray-50"
           }`}
         >
           <FaFilter />
           Filters
           {hasActiveFilters() && (
             <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 ml-1">
-              {Object.values(filters).reduce((count, value) =>
-                count + (Array.isArray(value) ? value.length : value ? 1 : 0), 0
+              {Object.values(filters).reduce(
+                (count, value) =>
+                  count + (Array.isArray(value) ? value.length : value ? 1 : 0),
+                0
               )}
             </span>
           )}
@@ -123,14 +118,18 @@ const SearchFilters = ({ onSearch, onFilterChange }) => {
                   type="number"
                   placeholder="Min"
                   value={filters.minPrice}
-                  onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+                  onChange={(e) =>
+                    handleFilterChange("minPrice", e.target.value)
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <input
                   type="number"
                   placeholder="Max"
                   value={filters.maxPrice}
-                  onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+                  onChange={(e) =>
+                    handleFilterChange("maxPrice", e.target.value)
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -143,7 +142,7 @@ const SearchFilters = ({ onSearch, onFilterChange }) => {
               </label>
               <select
                 value={filters.bedrooms}
-                onChange={(e) => handleFilterChange('bedrooms', e.target.value)}
+                onChange={(e) => handleFilterChange("bedrooms", e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Any</option>
@@ -154,19 +153,21 @@ const SearchFilters = ({ onSearch, onFilterChange }) => {
               </select>
             </div>
 
-            {/* Location */}
+            {/* City */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Location
+                City
               </label>
               <select
-                value={filters.location}
-                onChange={(e) => handleFilterChange('location', e.target.value)}
+                value={filters.city}
+                onChange={(e) => handleFilterChange("city", e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">Any Location</option>
-                {locations.map(location => (
-                  <option key={location} value={location}>{location}</option>
+                <option value="">Any City</option>
+                {cities.map((city) => (
+                  <option key={city} value={city}>
+                    {city}
+                  </option>
                 ))}
               </select>
             </div>
@@ -177,38 +178,19 @@ const SearchFilters = ({ onSearch, onFilterChange }) => {
                 Property Type
               </label>
               <select
-                value={filters.propertyType}
-                onChange={(e) => handleFilterChange('propertyType', e.target.value)}
+                value={filters.type}
+                onChange={(e) =>
+                  handleFilterChange("type", e.target.value)
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Any Type</option>
-                {propertyTypes.map(type => (
-                  <option key={type} value={type}>{type}</option>
+                {types.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
                 ))}
               </select>
-            </div>
-          </div>
-
-          {/* Amenities */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Amenities
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {amenitiesList.map(amenity => (
-                <button
-                  key={amenity}
-                  type="button"
-                  onClick={() => handleAmenityToggle(amenity)}
-                  className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                    filters.amenities.includes(amenity)
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {amenity}
-                </button>
-              ))}
             </div>
           </div>
 
@@ -223,7 +205,7 @@ const SearchFilters = ({ onSearch, onFilterChange }) => {
               Clear All Filters
             </button>
             <div className="text-sm text-gray-600">
-              {hasActiveFilters() ? 'Filters applied' : 'No filters applied'}
+              {hasActiveFilters() ? "Filters applied" : "No filters applied"}
             </div>
           </div>
         </div>
