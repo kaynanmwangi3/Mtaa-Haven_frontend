@@ -14,10 +14,17 @@ function TenantDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showIssueForm, setShowIssueForm] = useState(false);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState(null);
   const [issueData, setIssueData] = useState({
     title: '',
     description: '',
     priority: 'medium'
+  });
+  const [paymentData, setPaymentData] = useState({
+    payment_method: 'mpesa',
+    phone_number: '',
+    notes: ''
   });
   const navigate = useNavigate();
 
@@ -39,22 +46,35 @@ function TenantDashboard() {
       setLoading(true);
       setError(null);
 
-      const [bookingsRes, paymentsRes, issuesRes, notificationsRes] = await Promise.all([
-        api.get('/bookings'),
-        api.get('/payments/tenant'),
-        api.get('/issues/'),
-        api.get('/notifications/tenant')
+      const currentUser = authService.getCurrentUser();
+      if (!currentUser) return;
+
+      const [bookingsRes, paymentsRes, issuesRes] = await Promise.all([
+        api.get(`/bookings?user_id=${currentUser.id}&user_type=tenant`),
+        api.get(`/payments?user_id=${currentUser.id}&user_type=tenant`),
+        api.get('/issues')
       ]);
 
-      // Backend returns data in different structure
-      setBookings(bookingsRes.data.data || []);
-      setPayments(paymentsRes.data.data || []);
-      setIssues(issuesRes.data.data || []);
-      setNotifications(notificationsRes.data.data || []);
+      // Use the correct response structure from backend and ensure arrays
+      console.log('Bookings response:', bookingsRes.data);
+      console.log('Payments response:', paymentsRes.data);
+      console.log('Issues response:', issuesRes.data);
+      
+      const bookingsData = Array.isArray(bookingsRes.data?.bookings) ? bookingsRes.data.bookings : [];
+      const paymentsData = Array.isArray(paymentsRes.data?.payments) ? paymentsRes.data.payments : [];
+      const issuesData = Array.isArray(issuesRes.data) ? issuesRes.data : [];
+      
+      setBookings(bookingsData);
+      setPayments(paymentsData);
+      
+      // Filter issues for current user
+      const userIssues = issuesData.filter(issue => issue.user_id === currentUser.id);
+      setIssues(userIssues);
+      
+      setNotifications([]); // No notifications endpoint in provided routes
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       setError('Failed to load dashboard data. Please try again.');
-      // Load demo data as fallback
     } finally {
       setLoading(false);
     }
@@ -68,13 +88,27 @@ function TenantDashboard() {
   const handleReportIssue = async (e) => {
     e.preventDefault();
     try {
+      const currentUser = authService.getCurrentUser();
+      if (!currentUser) {
+        alert('You must be logged in to report an issue.');
+        return;
+      }
+
+      // Get property_id from first booking if available
+      const propertyId = Array.isArray(bookings) && bookings.length > 0 ? bookings[0].property_id : null;
+      if (!propertyId) {
+        alert('You need to have an active booking to report an issue.');
+        return;
+      }
+
       const issuePayload = {
+        user_id: currentUser.id,
+        property_id: propertyId,
         title: issueData.title,
         description: issueData.description,
-        issue_type: 'MAINTENANCE', // Backend expects issue_type enum
-        property_id: 1, // TODO: Get from current booking/property
-        priority: issueData.priority.toUpperCase()
+        issue_type: 'maintenance', 
       };
+      console.log('Reporting issue with payload:', issuePayload);
 
       await api.post('/issues', issuePayload);
       alert('Issue reported successfully!');
@@ -83,7 +117,8 @@ function TenantDashboard() {
       fetchDashboardData();
     } catch (error) {
       console.error('Error reporting issue:', error);
-      alert('Failed to report issue. Please try again.');
+      const errorMessage = error.response?.data?.error || 'Failed to report issue';
+      alert(`Error: ${errorMessage}`);
     }
   };
 
@@ -217,7 +252,7 @@ function TenantDashboard() {
               <div className="flex items-center">
                 <FaCreditCard className="text-green-500 text-2xl mr-3" />
                 <div>
-                  <p className="text-2xl font-bold">KES {payments.reduce((sum, p) => sum + (p.amount || 0), 0).toLocaleString()}</p>
+                  <p className="text-2xl font-bold">KES {payments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0).toLocaleString()}</p>
                   <p className="text-gray-600">Total Payments</p>
                 </div>
               </div>
@@ -242,16 +277,25 @@ function TenantDashboard() {
             </div>
           </div>
 
-          {/* Report Issue Button */}
+          {/* Action Buttons */}
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold">My Dashboard</h2>
-            <button
-              onClick={() => setShowIssueForm(true)}
-              className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 flex items-center gap-2"
-            >
-              <FaExclamationTriangle />
-              Report Issue
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowPaymentForm(true)}
+                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center gap-2"
+              >
+                <FaCreditCard />
+                Make Payment
+              </button>
+              <button
+                onClick={() => setShowIssueForm(true)}
+                className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 flex items-center gap-2"
+              >
+                <FaExclamationTriangle />
+                Report Issue
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -261,14 +305,31 @@ function TenantDashboard() {
               <div className="space-y-3">
                 {bookings.map(booking => (
                   <div key={booking.id} className="p-4 border rounded">
-                    <h4 className="font-medium">Property #{booking.property_id}</h4>
-                    <p className="text-sm text-gray-600">Start: {booking.start_date}</p>
-                    <p className="text-sm text-gray-600">End: {booking.end_date}</p>
-                    <span className={`px-2 py-1 rounded text-sm ${
-                      booking.status === 'CONFIRMED' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {booking.status}
-                    </span>
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h4 className="font-medium">Property #{booking.property_id}</h4>
+                        <p className="text-sm text-gray-600">Start: {booking.start_date}</p>
+                        <p className="text-sm text-gray-600">End: {booking.end_date}</p>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <span className={`px-2 py-1 rounded text-sm ${
+                          booking.status === 'CONFIRMED' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {booking.status}
+                        </span>
+                        {booking.status === 'CONFIRMED' && (
+                          <button
+                            onClick={() => {
+                              setSelectedBooking(booking);
+                              setShowPaymentForm(true);
+                            }}
+                            className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                          >
+                            Pay Rent
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 ))}
                 {bookings.length === 0 && (
@@ -288,7 +349,7 @@ function TenantDashboard() {
                       <p className="text-sm text-gray-600">{payment.due_date}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-medium">KES {payment.amount?.toLocaleString()}</p>
+                      <p className="font-medium">KES {parseFloat(payment.amount)?.toLocaleString()}</p>
                       <span className={`px-2 py-1 rounded text-sm ${
                         payment.status === 'COMPLETED' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                       }`}>
@@ -337,6 +398,105 @@ function TenantDashboard() {
             </div>
           </div>
         </main>
+
+        {/* Payment Modal */}
+        {showPaymentForm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+              <h3 className="text-xl font-bold mb-4">Make Payment</h3>
+              {selectedBooking && (
+                <div className="mb-4 p-3 bg-gray-50 rounded-md">
+                  <p className="text-sm text-gray-600">Property: #{selectedBooking.property_id}</p>
+                  <p className="text-sm text-gray-600">Booking: {selectedBooking.start_date} to {selectedBooking.end_date}</p>
+                </div>
+              )}
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                try {
+                  const currentUser = authService.getCurrentUser();
+                  if (!selectedBooking) {
+                    alert('No booking selected.');
+                    return;
+                  }
+                  
+                  const dueDate = new Date();
+                  dueDate.setDate(dueDate.getDate() + 30);
+                  
+                  const paymentPayload = {
+                    user_id: currentUser.id,
+                    property_id: selectedBooking.property_id,
+                    amount: 25000, // Should come from property rent amount
+                    due_date: dueDate.toISOString().replace('Z', '').replace(/\d{3}$/, '123456'),
+                    payment_method: paymentData.payment_method,
+                    notes: paymentData.notes || `Rental payment for Property #${selectedBooking.property_id}`
+                  };
+                  
+                  await api.post('/payments', paymentPayload);
+                  alert('Payment created successfully!');
+                  setShowPaymentForm(false);
+                  setPaymentData({ payment_method: 'mpesa', phone_number: '', notes: '' });
+                  fetchDashboardData();
+                } catch (error) {
+                  console.error('Payment error:', error);
+                  alert('Failed to create payment. Please try again.');
+                }
+              }}>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Payment Method</label>
+                    <select
+                      value={paymentData.payment_method}
+                      onChange={(e) => setPaymentData({...paymentData, payment_method: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    >
+                      <option value="mpesa">M-Pesa</option>
+                      <option value="card">Credit/Debit Card</option>
+                      <option value="bank">Bank Transfer</option>
+                    </select>
+                  </div>
+                  {paymentData.payment_method === 'mpesa' && (
+                    <div>
+                      <label className="block text-sm font-medium mb-1">M-Pesa Phone Number</label>
+                      <input
+                        type="tel"
+                        value={paymentData.phone_number}
+                        onChange={(e) => setPaymentData({...paymentData, phone_number: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        placeholder="0712345678"
+                        required
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Notes (Optional)</label>
+                    <textarea
+                      value={paymentData.notes}
+                      onChange={(e) => setPaymentData({...paymentData, notes: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      rows="2"
+                      placeholder="Payment notes..."
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowPaymentForm(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+                  >
+                    Create Payment
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* Issue Reporting Modal */}
         {showIssueForm && (

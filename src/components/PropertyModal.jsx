@@ -14,14 +14,14 @@ const PropertyModal = ({ property, isOpen, onClose}) => {
   const [bookingData, setBookingData] = useState({
     tenant_id: '',
     property_id: '',
-    move_in_date: '',
-    lease_duration: '12',
+    start_date: '',
+    end_date: '',
     special_requests: ''
   });
   const [paymentData, setPaymentData] = useState({
-    amount: '',
     payment_method: 'mpesa',
-    phone_number: ''
+    phone_number: '',
+    notes: ''
   });
   const [loading, setLoading] = useState(false);
 
@@ -33,36 +33,68 @@ const PropertyModal = ({ property, isOpen, onClose}) => {
     e.preventDefault();
     setLoading(true);
     try {
-    const user = authService.getCurrentUser(); 
-    const tenantId = user?.id; 
-    if (!tenantId) {
-      alert('You must be logged in as a tenant to make a booking.');
-      return;
-    }
-    const moveInDate = new Date(bookingData.move_in_date);
-    const endDate = new Date(moveInDate);
-    endDate.setMonth(endDate.getMonth() + parseInt(bookingData.lease_duration));
+      const user = authService.getCurrentUser(); 
+      const tenantId = user?.id; 
+      if (!tenantId) {
+        alert('You must be logged in as a tenant to make a booking.');
+        setLoading(false);
+        return;
+      }
 
+      // Validate dates
+      if (!bookingData.start_date || !bookingData.end_date) {
+        alert('Please select both start and end dates.');
+        setLoading(false);
+        return;
+      }
+
+      if (new Date(bookingData.start_date) >= new Date(bookingData.end_date)) {
+        alert('End date must be after start date.');
+        setLoading(false);
+        return;
+      }
+
+      // Convert dates to the required format: "2024-01-15T14:30:25.123456"
+      const formatDateTime = (dateStr) => {
+        const date = new Date(dateStr + 'T00:00:00');
+        return date.toISOString().replace('Z', '').replace(/\d{3}$/, '123456');
+      };
 
       const bookingPayload = {
         tenant_id: tenantId,
         property_id: property.id,
-        start_date: bookingData.move_in_date,
-        end_date: endDate.toISOString(),
+        start_date: formatDateTime(bookingData.start_date),
+        end_date: formatDateTime(bookingData.end_date),
         special_requests: bookingData.special_requests || ''
       };
 
-      console.log('Booking payload has loaded and is:', bookingPayload);
-
+      console.log('Booking payload:', bookingPayload);
+      console.log('Raw date values:', bookingData.start_date, bookingData.end_date);
       const response = await api.post('/bookings', bookingPayload);
+
       console.log('Booking response:', response.data);
       alert('Booking request submitted successfully!');
       setShowBookingForm(false);
       setShowPaymentForm(true);
     } catch (error) {
       console.error('Booking error:', error);
+      console.error('Error status:', error.response?.status);
       console.error('Error response:', error.response?.data);
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to submit booking';
+
+      
+      let errorMessage = 'Failed to submit booking';
+      if (error.response?.status === 400) {
+        errorMessage = error.response?.data?.error || error.response?.data?.message || 'Invalid booking data';
+      } else if (error.response?.status === 404) {
+        errorMessage = 'Property not found';
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Authentication failed. Please log in again.';
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
       alert(`Booking failed: ${errorMessage}`);
     } finally {
       setLoading(false);
@@ -73,18 +105,37 @@ const PropertyModal = ({ property, isOpen, onClose}) => {
     e.preventDefault();
     setLoading(true);
     try {
+      const user = authService.getCurrentUser();
+      if (!user) {
+        alert('You must be logged in to make a payment.');
+        setLoading(false);
+        return;
+      }
+
+      // Create due date (30 days from now)
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + 30);
+      
       const paymentPayload = {
+        user_id: user.id,
         property_id: property.id,
         amount: property.rent_amount,
-        ...paymentData
+        due_date: dueDate.toISOString().replace('Z', '').replace(/\d{3}$/, '123456'),
+        payment_method: paymentData.payment_method,
+        notes: paymentData.notes || 'Property rental payment'
       };
-      await api.post('/payments', paymentPayload);
+
+      console.log('Payment payload:', paymentPayload);
+      const response = await api.post('/payments', paymentPayload);
+      console.log('Payment response:', response.data);
       alert('Payment processed successfully!');
       setShowPaymentForm(false);
       onClose();
     } catch (error) {
       console.error('Payment error:', error);
-      alert('Payment failed. Please try again.');
+      console.error('Error response:', error.response?.data);
+      const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Payment failed';
+      alert(`Payment failed: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -216,26 +267,25 @@ const PropertyModal = ({ property, isOpen, onClose}) => {
             <form onSubmit={handleBooking}>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Move-in Date</label>
+                  <label className="block text-sm font-medium mb-1">Start Date</label>
                   <input
                     type="date"
-                    value={bookingData.move_in_date}
-                    onChange={(e) => setBookingData({...bookingData, move_in_date: e.target.value})}
+                    value={bookingData.start_date}
+                    onChange={(e) => setBookingData({...bookingData, start_date: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Lease Duration (months)</label>
-                  <select
-                    value={bookingData.lease_duration}
-                    onChange={(e) => setBookingData({...bookingData, lease_duration: e.target.value})}
+                  <label className="block text-sm font-medium mb-1">End Date</label>
+                  <input
+                    type="date"
+                    value={bookingData.end_date}
+                    onChange={(e) => setBookingData({...bookingData, end_date: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  >
-                    <option value="6">6 months</option>
-                    <option value="12">12 months</option>
-                    <option value="24">24 months</option>
-                  </select>
+                    required
+                  />
+
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Special Requests</label>
@@ -305,6 +355,16 @@ const PropertyModal = ({ property, isOpen, onClose}) => {
                     />
                   </div>
                 )}
+                <div>
+                  <label className="block text-sm font-medium mb-1">Notes (Optional)</label>
+                  <textarea
+                    value={paymentData.notes}
+                    onChange={(e) => setPaymentData({...paymentData, notes: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    rows="2"
+                    placeholder="Payment notes..."
+                  />
+                </div>
               </div>
               <div className="flex gap-3 mt-6">
                 <button
