@@ -39,23 +39,21 @@ function LandlordDashboard() {
         api.get(`/issues/landlord/${landlordId}`)
       ]);
 
-      setProperties(propertiesRes.data.data || []);
-      console.log("Bookings Data:", propertiesRes.data.data);
-      setBookings(bookingsRes.data.data || []);
+      const allProperties = propertiesRes.data.data || [];
+      const bookingsData = bookingsRes.data.data || [];
+      
+      // Only show properties that have bookings
+      const bookedPropertyIds = bookingsData.map(booking => booking.property_id);
+      const propertiesWithBookings = allProperties.filter(property => 
+        bookedPropertyIds.includes(property.id)
+      );
+      
+      setProperties(propertiesWithBookings);
+      console.log("Properties with bookings:", propertiesWithBookings);
+      setBookings(bookingsData);
       setIssues(issuesRes.data.data || []);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
-      // // Load demo data as fallback
-      // setProperties([
-      //   { id: 1, title: 'Modern Apartment', rent_amount: 25000, status: 'available', city: 'Westlands' },
-      //   { id: 2, title: 'Studio Unit', rent_amount: 15000, status: 'occupied', city: 'Kilimani' }
-      // ]);
-      // setBookings([
-      //   { id: 1, property_id: 1, tenant_id: 1, status: 'confirmed', start_date: '2024-01-15' }
-      // ]);
-      // setIssues([
-      //   { id: 1, title: 'Leaky faucet', description: 'Kitchen faucet needs repair', status: 'open', priority: 'medium', property_id: 1 }
-      // ]);
     } finally {
       setLoading(false);
     }
@@ -103,7 +101,13 @@ function LandlordDashboard() {
   const totalProperties = properties.length;
   const pendingIssues = issues.filter(i => i.status === 'open').length;
   const newBookings = bookings.filter(b => b.status === 'pending').length;
-  const totalRevenue = properties.reduce((sum, p) => sum + p.rent_amount, 0);
+  // Calculate revenue only from properties with confirmed bookings
+  const totalRevenue = bookings
+    .filter(booking => booking.status === 'CONFIRMED')
+    .reduce((sum, booking) => {
+      const property = properties.find(p => p.id === booking.property_id);
+      return sum + (property?.rent_amount || 0);
+    }, 0);
 
   return (
     <div className="min-h-screen flex bg-gray-100">
@@ -160,6 +164,8 @@ function LandlordDashboard() {
             onSuccess={(data) => {
               console.log("New property created:", data);
               setShowForm(false);
+              // Refresh properties list to show the new property
+              fetchDashboardData(user.id);
             }}
           />
         </div>

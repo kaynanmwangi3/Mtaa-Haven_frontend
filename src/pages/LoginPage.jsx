@@ -57,8 +57,6 @@ function LoginPage() {
     }
   };
 
-  
-
   return (
     <div className="haha">
       <div className={`container ${isActive ? "active" : ""}`}>
