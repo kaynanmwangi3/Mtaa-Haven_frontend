@@ -6,27 +6,27 @@ const initialBg =
 
 const services = [
   {
-    id: "fitness",
-    label: "Fitness Center",
-    bg: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1600",
-    description: "Stay active and energized with our world-class fitness amenities.",
+    id: "apartment",
+    label: "Apartments",
+    bg: "https://crm.roongtadevelopers.com/app/admin/assets/images/blog/1723200045.jpg",
+    description: "Enjoy your stay in our exclusive apartments.",
   },
   {
-    id: "spa",
-    label: "Spa Center",
-    bg: "https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?auto=format&fit=crop&w=1600",
-    description: "Relax and rejuvenate your senses with our luxurious spa services.",
+    id: "hostel",
+    label: "Hostels",
+    bg: "https://budgettraveller.org/wp-content/uploads/2015/08/IMG_5250.jpg",
+    description: "Students enjoy their stay in our safe and secure hostels.",
   },
   {
-    id: "pool",
-    label: "Swimming Pool",
-    bg: "https://cdn.prod.website-files.com/684c437bd1bedfba51264f73/68583c9d2a5154ac8869bc6a_dine-in-p-2000.jpg",
-    description: "Take a dip and unwind in our serene outdoor swimming pool.",
+    id: "mansions",
+    label: "Mansions & Manors",
+    bg: "https://media.istockphoto.com/id/157337394/photo/english-country-mansion.jpg?s=612x612&w=0&k=20&c=VqJNTINsCYliuVJnBqaZrfT5ygeeUqf-z4_zhL1hJw0=",
+    description: "Enrich your taste in timeless elegance.",
   },
   {
-    id: "dining",
-    label: "Restaurant & Dine In",
-    bg: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1600",
+    id: "villa",
+    label: "Villa",
+    bg: "https://www.thetimes.com/imageserver/image/%2Fmethode%2Ftimes%2Fprod%2Fweb%2Fbin%2Fa9875c79-7050-462d-a8cb-f8fa42b4ba9a.jpg?crop=1920%2C1261%2C0%2C0",
     description: "Enjoy exquisite dining experiences curated by top chefs.",
   },
 ];
@@ -35,7 +35,7 @@ export default function ServicesSection() {
   const [active, setActive] = useState(null);
 
   return (
-    <section className="relative h-150 w-full overflow-hidden flex ">
+    <section className="relative h-200 w-full overflow-hidden flex ">
       {/* ---------------- BACKGROUNDS ---------------- */}
       <div className="absolute inset-0 transition-opacity duration-700">
         {/* Initial background */}
@@ -64,8 +64,8 @@ export default function ServicesSection() {
       {/* ---------------- CONTENT ---------------- */}
       <div className="relative z-10 flex h-full flex-col items-center justify-center text-white text-center px-6">
         {/* Main Title */}
-        <h1 className="mb-12 text-5xl md:text-7xl font-semibold tracking-wider animate-in fade-in flex items-center">
-          {active?.label?.toUpperCase() ?? "OUR SERVICES"}
+        <h1 className="mb-12 text-5xl md:text-7xl font-semibold tracking-wider animate-in fade-in flex items-center justify-center">
+          {active?.label?.toUpperCase() ?? "PROPERTIES"}
         </h1>
 
         {/* SERVICE BUTTONS */}

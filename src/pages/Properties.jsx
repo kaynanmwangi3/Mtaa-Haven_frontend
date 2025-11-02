@@ -24,7 +24,6 @@ function Properties(){
 
      const fetchProperties = async (filters = {}) => {
          try {
-            console.log("Fetching properties...");
              const queryParams = new URLSearchParams();
 
              if (filters.city) queryParams.append('city', filters.city);
@@ -33,9 +32,7 @@ function Properties(){
              if (filters.type) queryParams.append('type', filters.type);
 
              const url = `/properties${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-             console.log("Request URL:", url);
              const response = await api.get(url);
-              console.log("Response:", response.data.properties);
              const propertiesData = response.data.properties;
              setProperties(Array.isArray(propertiesData) ? propertiesData : []);
          } catch (error) {
@@ -64,7 +61,6 @@ function Properties(){
 
      const applyFiltersAndSort = () => {
          let filtered = [...properties];
-         console.log("shoing ",filtered);
 
          // Apply search query
          if (currentFilters.searchQuery) {
