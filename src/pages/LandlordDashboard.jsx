@@ -75,6 +75,12 @@ function LandlordDashboard() {
       setTotalRevenue(totalRevenue);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
+      console.error('Error details:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data
+      });
+      setError(`Failed to load dashboard data: ${error.response?.data?.error || error.message}`);
     } finally {
       setLoading(false);
     }
