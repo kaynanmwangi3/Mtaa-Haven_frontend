@@ -24,10 +24,32 @@ const PropertyModal = ({ property, isOpen, onClose}) => {
     notes: ''
   });
   const [loading, setLoading] = useState(false);
+  const [createdBooking, setCreatedBooking] = useState(null);
+  const [hasUnpaidBooking, setHasUnpaidBooking] = useState(false);
 
   if (!isOpen || !property) return null;
 
   const cld = new Cloudinary({ cloud: { cloudName: 'djtahjahe' } });
+
+  // Check if a booking has been paid
+  const checkBookingPaymentStatus = async (bookingId) => {
+    try {
+      const user = authService.getCurrentUser();
+      const paymentsRes = await api.get(`/payments?user_id=${user.id}&user_type=tenant`);
+      const payments = paymentsRes.data.payments || [];
+      
+      // Check if there's a payment for this booking's property
+      const hasPayment = payments.some(payment => 
+        payment.property_id === property.id && 
+        payment.status === 'COMPLETED'
+      );
+      
+      setHasUnpaidBooking(!hasPayment);
+    } catch (error) {
+      console.error('Error checking payment status:', error);
+      setHasUnpaidBooking(true); // Default to showing payment if check fails
+    }
+  };
 
   const handleBooking = async (e) => {
     e.preventDefault();
@@ -68,14 +90,30 @@ const PropertyModal = ({ property, isOpen, onClose}) => {
         special_requests: bookingData.special_requests || ''
       };
 
-      console.log('Booking payload:', bookingPayload);
-      console.log('Raw date values:', bookingData.start_date, bookingData.end_date);
       const response = await api.post('/bookings', bookingPayload);
-
-      console.log('Booking response:', response.data);
-      alert('Booking request submitted successfully!');
+      const newBooking = response.data.booking;
+      setCreatedBooking(newBooking);
+      
+      try {
+        const propertyRes = await api.get(`/properties/${property.id}`);
+        const propertyData = propertyRes.data.property;
+        
+        if (propertyData && propertyData.landlord_id) {
+          await api.post('/notifications', {
+            title: 'New Booking Request',
+            message: `New booking request for ${property.title} from ${user?.first_name} ${user?.last_name}`,
+            user_id: propertyData.landlord_id,
+            property_id: property.id,
+            type: 'general'
+          });
+        }
+      } catch (notifError) {
+        console.error('Failed to send notification to landlord:', notifError);
+      }
+      
+      alert('Booking request submitted successfully! Wait for landlord confirmation before making payment.');
       setShowBookingForm(false);
-      setShowPaymentForm(true);
+      onClose();
     } catch (error) {
       console.error('Booking error:', error);
       console.error('Error status:', error.response?.status);
@@ -116,18 +154,23 @@ const PropertyModal = ({ property, isOpen, onClose}) => {
       const dueDate = new Date();
       dueDate.setDate(dueDate.getDate() + 30);
       
+      // Only create payment if we have a booking and it's unpaid
+      if (!createdBooking) {
+        alert('No booking found. Please create a booking first.');
+        setLoading(false);
+        return;
+      }
+
       const paymentPayload = {
         user_id: user.id,
-        property_id: property.id,
+        property_id: createdBooking.property_id,
         amount: property.rent_amount,
         due_date: dueDate.toISOString().replace('Z', '').replace(/\d{3}$/, '123456'),
         payment_method: paymentData.payment_method,
-        notes: paymentData.notes || 'Property rental payment'
+        notes: paymentData.notes || `Payment for booking #${createdBooking.id}`
       };
 
-      console.log('Payment payload:', paymentPayload);
       const response = await api.post('/payments', paymentPayload);
-      console.log('Payment response:', response.data);
       alert('Payment processed successfully!');
       setShowPaymentForm(false);
       onClose();
@@ -325,7 +368,8 @@ const PropertyModal = ({ property, isOpen, onClose}) => {
           <div className="bg-white rounded-lg max-w-md w-full p-6">
             <h3 className="text-xl font-bold mb-4">Complete Payment</h3>
             <div className="mb-4 p-3 bg-gray-50 rounded-md">
-              <p className="text-sm text-gray-600">Property: {property.name}</p>
+              <p className="text-sm text-gray-600">Property: {property.title}</p>
+              <p className="text-sm text-gray-600">Booking ID: #{createdBooking?.id}</p>
               <p className="text-lg font-bold text-green-600">KES {property.rent_amount?.toLocaleString()}</p>
             </div>
             <form onSubmit={handlePayment}>

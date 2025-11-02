@@ -36,7 +36,7 @@ function MiddlePart(){
               <div class="carousel-item active">
                 <img
                   src="https://media.istockphoto.com/id/2155879397/photo/house-in-a-charming-neighborhood-with-stunning-sidewalk-landscaping.jpg?s=612x612&w=0&k=20&c=nQJOUoNb2RNev3QVNjIohcmxQABCTetCdgfnc8MV8sU="
-                  class="d-block w-100 h-140 object-cover"
+                  class="d-block w-100 h-170 object-cover"
                   alt="..."
                 />
                 <div class="carousel-caption d-none d-md-block text-white">
@@ -49,7 +49,7 @@ function MiddlePart(){
               <div class="carousel-item">
                 <img
                   src="https://i.pinimg.com/originals/29/61/07/2961072ce9c7fa492d20a8ee007c4847.jpg"
-                  class="d-block w-100  h-140 object-cover"
+                  class="d-block w-100  h-170 object-cover"
                   alt="..."
                 />
                 <div class="carousel-caption d-none d-md-block">
@@ -62,7 +62,7 @@ function MiddlePart(){
               <div class="carousel-item">
                 <img
                   src="https://media.istockphoto.com/id/1437629749/photo/land-plot-in-aerial-view-in-chiang-mai-of-thailand.jpg?s=612x612&w=0&k=20&c=07y-L9_WJwFGmvvhrZULYbfTfDtUPHnxJhbxWPTiqYg="
-                  class="d-block w-100  h-140 object-cover"
+                  class="d-block w-100  h-170 object-cover"
                   alt="..."
                 />
                 <div class="carousel-caption d-none d-md-block">

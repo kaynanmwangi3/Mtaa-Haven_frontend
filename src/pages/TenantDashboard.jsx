@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FaEye, FaSearch, FaBars, FaTimes, FaHome, FaUser, FaCog, FaSignOutAlt, FaExclamationTriangle, FaBell, FaCreditCard, FaClipboardList } from 'react-icons/fa';
+import { FaEye, FaSearch, FaBars, FaTimes, FaHome, FaUser, FaCog, FaSignOutAlt, FaExclamationTriangle, FaBell, FaCreditCard, FaClipboardList, FaTrash } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth';
 import api from '../services/auth';
@@ -11,11 +11,13 @@ function TenantDashboard() {
   const [payments, setPayments] = useState([]);
   const [issues, setIssues] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showIssueForm, setShowIssueForm] = useState(false);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [issueData, setIssueData] = useState({
     title: '',
     description: '',
@@ -28,13 +30,25 @@ function TenantDashboard() {
   });
   const navigate = useNavigate();
 
+  const formatDate = (dateStr) => {
+    const date = new Date(dateStr);
+    const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+    return date.toLocaleDateString('en-GB', options).replace(/\b(\d+)\b/, (match) => {
+      const day = parseInt(match);
+      const suffix = day === 1 || day === 21 || day === 31 ? 'st' : 
+                    day === 2 || day === 22 ? 'nd' : 
+                    day === 3 || day === 23 ? 'rd' : 'th';
+      return day + suffix;
+    });
+  };
+
   useEffect(() => {
     const currentUser = authService.getCurrentUser();
     setUser(currentUser);
 
     // Check if user is tenant
     if (!currentUser || currentUser.user_type !== 'tenant') {
-      navigate('/properties'); // Redirect non-tenants
+      navigate('/properties'); 
       return;
     }
 
@@ -49,34 +63,47 @@ function TenantDashboard() {
       const currentUser = authService.getCurrentUser();
       if (!currentUser) return;
 
-      const [bookingsRes, paymentsRes, issuesRes] = await Promise.all([
+      const [bookingsRes, paymentsRes, issuesRes, propertiesRes] = await Promise.all([
         api.get(`/bookings?user_id=${currentUser.id}&user_type=tenant`),
         api.get(`/payments?user_id=${currentUser.id}&user_type=tenant`),
-        api.get('/issues')
+        api.get(`/issues/tenant/${currentUser.id}`),
+        api.get('/properties')
       ]);
 
       // Use the correct response structure from backend and ensure arrays
-      console.log('Bookings response:', bookingsRes.data);
-      console.log('Payments response:', paymentsRes.data);
-      console.log('Issues response:', issuesRes.data);
       
       const bookingsData = Array.isArray(bookingsRes.data?.bookings) ? bookingsRes.data.bookings : [];
       const paymentsData = Array.isArray(paymentsRes.data?.payments) ? paymentsRes.data.payments : [];
-      const issuesData = Array.isArray(issuesRes.data) ? issuesRes.data : [];
+      const issuesData = Array.isArray(issuesRes.data?.data) ? issuesRes.data.data : [];
+      const propertiesData = Array.isArray(propertiesRes.data?.data) ? propertiesRes.data.data : [];
       
       setBookings(bookingsData);
       setPayments(paymentsData);
+      setProperties(propertiesData);
+      setIssues(issuesData);
       
-      // Filter issues for current user
-      const userIssues = issuesData.filter(issue => issue.user_id === currentUser.id);
-      setIssues(userIssues);
-      
-      setNotifications([]); // No notifications endpoint in provided routes
+      // Fetch notifications for tenant
+      try {
+        const notificationsRes = await api.get(`/notifications?user_id=${currentUser.id}`);
+        setNotifications(notificationsRes.data.notifications || []);
+      } catch (notifError) {
+        console.error('Failed to fetch notifications:', notifError);
+        setNotifications([]);
+      }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       setError('Failed to load dashboard data. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteNotification = async (notificationId) => {
+    try {
+      await api.delete(`/notifications/${notificationId}`);
+      setNotifications(prev => prev.filter(n => n.id !== notificationId));
+    } catch (error) {
+      console.error('Error deleting notification:', error);
     }
   };
 
@@ -106,9 +133,9 @@ function TenantDashboard() {
         property_id: propertyId,
         title: issueData.title,
         description: issueData.description,
-        issue_type: 'maintenance', 
+        priority: issueData.priority,
+        issue_type: 'maintenance'
       };
-      console.log('Reporting issue with payload:', issuePayload);
 
       await api.post('/issues', issuePayload);
       alert('Issue reported successfully!');
@@ -206,8 +233,65 @@ function TenantDashboard() {
               </button>
               <h1 className="text-2xl font-bold text-gray-800">Tenant Dashboard</h1>
             </div>
-            <div className="text-sm text-gray-600">
-              Welcome back, {user?.first_name || 'Tenant'}!
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <button
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="text-gray-600 relative p-2 hover:bg-gray-100 rounded-full"
+                >
+                  <FaBell className="text-xl" />
+                  {notifications.filter(n => !n.is_read).length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {notifications.filter(n => !n.is_read).length > 9 ? '9+' : notifications.filter(n => !n.is_read).length}
+                    </span>
+                  )}
+                </button>
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto border">
+                    <div className="p-4 border-b">
+                      <h3 className="font-semibold text-gray-800">Notifications</h3>
+                    </div>
+                    <div className="divide-y divide-gray-100">
+                      {notifications.length > 0 ? (
+                        notifications.map(notification => (
+                          <div
+                            key={notification.id}
+                            className={`p-4 hover:bg-gray-50 cursor-pointer ${!notification.is_read ? 'bg-blue-50' : ''}`}
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <h4 className="text-sm font-medium text-gray-800">{notification.title}</h4>
+                                <p className="text-sm text-gray-600">{notification.message}</p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {new Date(notification.created_at).toLocaleDateString()}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2 ml-2">
+                                {!notification.is_read && (
+                                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                )}
+                                <button
+                                  onClick={() => handleDeleteNotification(notification.id)}
+                                  className="text-red-500 hover:text-red-700 p-1"
+                                >
+                                  <FaTrash className="text-xs" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="p-4 text-center text-gray-500">
+                          No notifications
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="text-sm text-gray-600">
+                Welcome back, {user?.first_name || 'Tenant'}!
+              </div>
             </div>
           </div>
         </header>
@@ -261,7 +345,7 @@ function TenantDashboard() {
               <div className="flex items-center">
                 <FaExclamationTriangle className="text-red-500 text-2xl mr-3" />
                 <div>
-                  <p className="text-2xl font-bold">{issues.filter(i => i.status === 'pending').length}</p>
+                  <p className="text-2xl font-bold">{issues.filter(i => i.status !== 'resolved' && i.status !== 'RESOLVED').length}</p>
                   <p className="text-gray-600">Open Issues</p>
                 </div>
               </div>
@@ -282,7 +366,15 @@ function TenantDashboard() {
             <h2 className="text-2xl font-bold">My Dashboard</h2>
             <div className="flex gap-3">
               <button
-                onClick={() => setShowPaymentForm(true)}
+                onClick={() => {
+                  const confirmedBooking = bookings.find(b => b.status === 'confirmed');
+                  if (confirmedBooking) {
+                    setSelectedBooking(confirmedBooking);
+                    setShowPaymentForm(true);
+                  } else {
+                    alert('You need a confirmed booking to make a payment.');
+                  }
+                }}
                 className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center gap-2"
               >
                 <FaCreditCard />
@@ -307,17 +399,17 @@ function TenantDashboard() {
                   <div key={booking.id} className="p-4 border rounded">
                     <div className="flex justify-between items-start mb-2">
                       <div>
-                        <h4 className="font-medium">Property #{booking.property_id}</h4>
-                        <p className="text-sm text-gray-600">Start: {booking.start_date}</p>
-                        <p className="text-sm text-gray-600">End: {booking.end_date}</p>
+                        <h4 className="font-medium">{booking.property_title || `Property #${booking.property_id}`}</h4>
+                        <p className="text-sm text-gray-600">Start: {formatDate(booking.start_date)}</p>
+                        <p className="text-sm text-gray-600">End: {formatDate(booking.end_date)}</p>
                       </div>
                       <div className="flex flex-col gap-2">
                         <span className={`px-2 py-1 rounded text-sm ${
-                          booking.status === 'CONFIRMED' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                          booking.status === 'confirmed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                         }`}>
                           {booking.status}
                         </span>
-                        {booking.status === 'CONFIRMED' && (
+                        {booking.status === 'confirmed' && (
                           <button
                             onClick={() => {
                               setSelectedBooking(booking);
@@ -327,6 +419,11 @@ function TenantDashboard() {
                           >
                             Pay Rent
                           </button>
+                        )}
+                        {booking.status === 'pending' && (
+                          <span className="px-3 py-1 bg-gray-300 text-gray-600 text-xs rounded">
+                            Awaiting Confirmation
+                          </span>
                         )}
                       </div>
                     </div>
@@ -345,8 +442,8 @@ function TenantDashboard() {
                 {payments.map(payment => (
                   <div key={payment.id} className="flex justify-between items-center p-3 border rounded">
                     <div>
-                      <p className="font-medium">Property #{payment.property_id}</p>
-                      <p className="text-sm text-gray-600">{payment.due_date}</p>
+                      <p className="font-medium">{payment.property_title || `Property #${payment.property_id}`}</p>
+                      <p className="text-sm text-gray-600">{formatDate(payment.due_date)}</p>
                     </div>
                     <div className="text-right">
                       <p className="font-medium">KES {parseFloat(payment.amount)?.toLocaleString()}</p>
@@ -373,8 +470,8 @@ function TenantDashboard() {
                     <div className="flex justify-between items-start mb-2">
                       <h4 className="font-medium">{issue.title}</h4>
                       <span className={`px-2 py-1 rounded text-xs ${
-                        issue.priority === 'HIGH' ? 'bg-red-100 text-red-800' :
-                        issue.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
+                        issue.priority === 'high' ? 'bg-red-100 text-red-800' :
+                        issue.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
                         'bg-green-100 text-green-800'
                       }`}>
                         {issue.priority}
@@ -382,7 +479,7 @@ function TenantDashboard() {
                     </div>
                     <p className="text-sm text-gray-600 mb-2">{issue.description}</p>
                     <div className="flex justify-between items-center">
-                      <p className="text-sm text-gray-500">{issue.created_at}</p>
+                      <p className="text-sm text-gray-500">{issue.property_title || `Property #${issue.property_id}`}</p>
                       <span className={`px-2 py-1 rounded text-sm ${
                         issue.status === 'RESOLVED' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                       }`}>
@@ -406,8 +503,8 @@ function TenantDashboard() {
               <h3 className="text-xl font-bold mb-4">Make Payment</h3>
               {selectedBooking && (
                 <div className="mb-4 p-3 bg-gray-50 rounded-md">
-                  <p className="text-sm text-gray-600">Property: #{selectedBooking.property_id}</p>
-                  <p className="text-sm text-gray-600">Booking: {selectedBooking.start_date} to {selectedBooking.end_date}</p>
+                  <p className="text-sm text-gray-600">Property: {selectedBooking.property_title || `#${selectedBooking.property_id}`}</p>
+                  <p className="text-sm text-gray-600">Booking: {formatDate(selectedBooking.start_date)} to {formatDate(selectedBooking.end_date)}</p>
                 </div>
               )}
               <form onSubmit={async (e) => {
@@ -432,13 +529,32 @@ function TenantDashboard() {
                   };
                   
                   await api.post('/payments', paymentPayload);
+                  
+                  try {
+                    const propertyRes = await api.get(`/properties/${selectedBooking.property_id}`);
+                    const propertyData = propertyRes.data.property;
+                    
+                    if (propertyData && propertyData.landlord_id) {
+                      await api.post('/notifications', {
+                        title: 'New Payment Received',
+                        message: `Payment of KES 25,000 received for ${selectedBooking.property_title || `Property #${selectedBooking.property_id}`} from ${currentUser.first_name} ${currentUser.last_name}`,
+                        user_id: propertyData.landlord_id,
+                        property_id: selectedBooking.property_id,
+                        type: 'general'
+                      });
+                    }
+                  } catch (notifError) {
+                    console.error('Notification creation failed:', notifError);
+                  }
+                  
                   alert('Payment created successfully!');
                   setShowPaymentForm(false);
                   setPaymentData({ payment_method: 'mpesa', phone_number: '', notes: '' });
                   fetchDashboardData();
                 } catch (error) {
                   console.error('Payment error:', error);
-                  alert('Failed to create payment. Please try again.');
+                  const errorMessage = error.response?.data?.error || 'Failed to create payment. Please try again.';
+                  alert(errorMessage);
                 }
               }}>
                 <div className="space-y-4">
@@ -534,9 +650,9 @@ function TenantDashboard() {
                       onChange={(e) => setIssueData({...issueData, priority: e.target.value})}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     >
-                      <option value="LOW">Low</option>
-                      <option value="MEDIUM">Medium</option>
-                      <option value="HIGH">High</option>
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
                     </select>
                   </div>
                 </div>

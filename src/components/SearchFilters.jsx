@@ -14,7 +14,7 @@ const SearchFilters = ({ onSearch, onFilterChange }) => {
 
   const cities = ["Nairobi","Mombasa","Kisumu","Nakuru","Eldoret","Thika","Malindi","Machakos","Naivasha"];
 
-  const types = ["Apartment", "House", "Studio", "Townhouse", "Villa", "Bungalow"];
+  const types = ["Apartment", "House", "Studio", "Townhouse", "Villa", "Bungalow","Penthouse","Cottage","Loft"];
 
   const handleSearch = (e) => {
     e.preventDefault();
